@@ -1,1 +1,894 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シビックテック・タウン 最終版デザインマスター</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Google Fontsから Noto Color Emoji (OFLライセンス) を明示的に読み込む */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Color+Emoji&family=Noto+Sans+JP:wght@400;700;900&display=swap');
+        
+        body {
+            /* フォントファミリーの指定に Noto Color Emoji を追加し、OS標準絵文字より優先・統合する */
+            font-family: 'Inter', 'Noto Sans JP', 'Noto Color Emoji', sans-serif;
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        
+        /* 印刷用ページ設定 (A4) */
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
 
+        @media print {
+            body { background-color: white; padding: 0; }
+            .no-print { display: none !important; }
+            .page-break { 
+                page-break-after: always; 
+                width: 210mm;
+                height: 297mm;
+                padding: 16.5mm 10.5mm; 
+                box-sizing: border-box;
+                position: relative;
+            }
+            .print-grid { 
+                display: grid; 
+                grid-template-columns: repeat(3, 63mm); 
+                grid-template-rows: repeat(3, 88mm);
+                gap: 0; 
+                width: 189mm;
+                height: 264mm;
+            }
+        }
+        
+        @media screen {
+            .page-break { margin: 20px auto; background: white; padding: 40px; max-width: 900px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            .print-grid { display: grid; grid-template-columns: repeat(3, 63mm); grid-auto-rows: 88mm; gap: 10px; justify-content: center; }
+        }
+
+        .card-container {
+            width: 63mm;
+            height: 88mm;
+            position: relative;
+            box-sizing: border-box;
+            border: 0.1mm dashed #cbd5e1; 
+            overflow: hidden; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: transparent;
+        }
+
+        .card-wrapper {
+            width: 280px;
+            height: 400px;
+            transform: scale(0.85); 
+            transform-origin: center center;
+            position: absolute;
+            box-sizing: border-box;
+            border-radius: 20px; 
+            overflow: hidden;
+            background-color: white;
+            flex-shrink: 0;
+        }
+
+        .blank-line {
+            border-bottom: 1.5px dashed #cbd5e1;
+            height: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pat-event { background-image: repeating-linear-gradient(45deg, rgba(220, 38, 38, 0.1) 0, rgba(220, 38, 38, 0.1) 10px, transparent 10px, transparent 20px); }
+        .pat-hp { background: repeating-conic-gradient(from 0deg, rgba(251, 191, 36, 0.05) 0deg 15deg, transparent 15deg 30deg); }
+        .grid-bg-back { background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1.2px, transparent 1.2px); background-size: 16px 16px; }
+    </style>
+</head>
+<body>
+
+    <nav class="no-print max-w-4xl mx-auto mt-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <h1 class="text-2xl font-black text-slate-800 mb-2">🖨️ 最終版デザインマスター（ルール洗練版）</h1>
+        <p class="text-sm text-slate-600 mb-4">
+            A4用紙、倍率<strong>100%</strong>、<strong>背景のグラフィック：ON</strong>、<strong>両面印刷（長辺綴じ）</strong>で出力し、HPカードは印刷後に中央のガイドラインに沿って切り離してください。
+        </p>
+        <button onclick="window.print()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl transition-all flex items-center justify-center gap-2">
+            <span>印刷画面を開く (PDFとして保存)</span>
+        </button>
+    </nav>
+
+    <div id="print-area"></div>
+
+    <script>
+        const getBorderText = (textColor = 'text-white/80', copyColor = 'text-white/50') => `
+            <div class="absolute left-0 top-[60px] bottom-[60px] w-[20px] flex items-center justify-center pointer-events-none">
+                <span class="${textColor} text-[10px] font-black tracking-[0.3em] -rotate-90 whitespace-nowrap">CIVIC TECH TOWN</span>
+            </div>
+            <div class="absolute right-0 top-[60px] bottom-[60px] w-[20px] flex items-center justify-center pointer-events-none">
+                <span class="${textColor} text-[10px] font-black tracking-[0.3em] rotate-90 whitespace-nowrap">CIVIC TECH CARD GAME</span>
+            </div>
+            <div class="absolute bottom-0 left-[60px] right-[60px] h-[20px] flex items-center justify-center pointer-events-none">
+                <span class="${copyColor} text-[7px] font-bold tracking-widest whitespace-nowrap">© 2026 CIVIC TECH TOWN PROJECT</span>
+            </div>
+        `;
+
+        const shapePath = {
+            data: 'M0 0h44v32a12 12 0 01-12 12H0V0z',
+            tech: 'M0 0h44v24L24 44H0V0z',
+            dial: 'M0 0h44v24a10 10 0 01-10 10h-6l-5 10-4-10H0V0z'
+        };
+
+        // パターン生成関数
+        const getPatternDef = (patName, patColor, patId) => {
+            if (patName === 'dot') {
+                return `<pattern id="${patId}" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.5" fill="${patColor}" opacity="0.4"/></pattern>`;
+            } else if (patName === 'circuit') {
+                return `<pattern id="${patId}" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M0 15h10l5-5h10 M15 30v-10l5-5h10 M0 5h5l5 5h10 M25 5v5l-5 5v10" fill="none" stroke="${patColor}" stroke-width="1.5" opacity="0.4"/><circle cx="25" cy="10" r="2" fill="${patColor}" opacity="0.6"/><circle cx="10" cy="15" r="2" fill="${patColor}" opacity="0.6"/><circle cx="20" cy="20" r="2" fill="${patColor}" opacity="0.6"/></pattern>`;
+            } else {
+                return `<pattern id="${patId}" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="8" fill="none" stroke="${patColor}" stroke-width="1.5" opacity="0.4"/><circle cx="20" cy="20" r="16" fill="none" stroke="${patColor}" stroke-width="1.5" opacity="0.4"/><circle cx="20" cy="20" r="24" fill="none" stroke="${patColor}" stroke-width="1.5" opacity="0.4"/></pattern>`;
+            }
+        };
+
+        // --- 1. 地域データ ---
+        const regionData = [
+            { id: 'R1', title: 'スタートアップ', sub: 'Agile & Speed', icon: '🚀', exp: '💻 技術', abl: '技術コストを <span class="font-black text-emerald-600">1枚少なく</span> 解決可能。', weak: 'なし' },
+            { id: 'R2', title: '文教エリア', sub: 'Data & Evidence', icon: '🎓', exp: '🛡️ データ', abl: 'ドロー時【データ】を選択すれば <span class="font-black text-emerald-600">追加でもう1枚引ける。</span>', weak: 'なし' },
+            { id: 'R3', title: '下町エリア', sub: 'Trust & Dialogue', icon: '🏮', exp: '🤝 対話', abl: '「対話」を含むPJ解決時 <span class="font-black text-emerald-600">+1 HP</span> (1R1回)。', weak: '技術かデータ2枚以上のPJを単独解決で <span class="font-black text-red-600">-1 HP</span>' },
+            { id: 'R4', title: '中心エリア', sub: 'Platform & Hub', icon: '🏢', exp: '🏢 基盤', abl: '専用アクション <span class="font-black text-emerald-600">「コミッター参画」</span> が可能。', weak: '対話2枚以上のPJを単独解決で <span class="font-black text-red-600">-1 HP</span>' }
+        ];
+
+        // --- 2. イベントデータ (10種) ---
+        const eventsData = [
+            {id: 1, title: "オープンデータ推進の風", condition: "解決不要 (ポジティブイベント)", fail: "-", bonus: "全員がデータ山札から1枚引く。不満-1。", e1: "🍃", e2: "🛡️"},
+            {id: 2, title: "メンテナンス不足の露呈", condition: "全員で技術計2枚<br>または 誰か1人が[デバッグツール]", fail: "不満+1", bonus: "-", e1: "🔧", e2: "⚠️"},
+            {id: 3, title: "メディアでの大特集", condition: "解決不要 (ポジティブイベント)", fail: "-", bonus: "自身が公開中の共有リソースが最多の<br>プレイヤー(同数なら全員)に3HP。不満-1。", e1: "📺", e2: "✨"},
+            {id: 4, title: "SNSでの情報の混乱", condition: "全員でデータ計2枚", fail: "不満+1", bonus: "投入カードに[ファクトチェック用統計] が<br>含まれていれば不満-1。", e1: "📱", e2: "❓"},
+            {id: 5, title: "共通ツールの脆弱性発見", condition: "全員で技術計2枚<br>または 誰か1人が[セキュリティパッチ]", fail: "不満+1", bonus: "-", e1: "🔓", e2: "💻"},
+            {id: 6, title: "他地域からの視察", condition: "データ・技術・対話すべての<br>共有リソースが各1枚以上あるか", fail: "不満+1", bonus: "達成で不満-2、さらに全員1HP獲得。", e1: "🚐", e2: "🏙️"},
+            {id: 7, title: "メンバーの燃え尽き症候群", condition: "全員が対話を1枚ずつ または 誰か1人が<br>[ピザとビール] か [感謝のメッセージ]", fail: "不満+1", bonus: "-", e1: "😫", e2: "🔥"},
+            {id: 8, title: "開発ツールのアップデート", condition: "全員が技術かデータを1枚ずつ", fail: "不満+1", bonus: "投入カードに[新Ver対応キット] が<br>含まれていれば不満-1。", e1: "🆙", e2: "🛠️"},
+            {id: 9, title: "住民からの感謝の声", condition: "解決不要 (ポジティブイベント)", fail: "-", bonus: "全員1HP獲得。不満-1。", e1: "💌", e2: "🏘️"},
+            {id: 10, title: "データの二次利用ニュース", condition: "有用な共有リソースが計3枚以上", fail: "変動なし", bonus: "達成なら不満-1。さらに自身が公開中の<br>共有リソース1枚につき1HP獲得。", e1: "📈", e2: "🔄"}
+        ];
+
+        // --- 3. プロジェクトデータ (30種) ---
+        const projectsData = [
+            { id: 1, cat: "safety", title: "AEDマップ", cost: [{t:'data', n:'AED位置情報'}, {t:'tech', n:'地図API'}], hp: 3, e1: "🏥", e2: "🗺️" },
+            { id: 2, cat: "safety", title: "日陰ルート案内", cost: [{t:'data', n:'日影データ'}, {t:'tech', n:'地図API'}], hp: 3, e1: "🌳", e2: "☀️" },
+            { id: 3, cat: "safety", title: "持ち物チェッカー", cost: [{t:'data', n:'避難所名簿'}, {t:'tech', n:'Webフォーム'}], hp: 3, e1: "🎒", e2: "✅" },
+            { id: 4, cat: "safety", title: "バリアフリーマップ", cost: [{t:'data', n:'バリアフリー'}, {t:'tech', n:'地図API'}], hp: 3, e1: "♿", e2: "🛣️" },
+            { id: 5, cat: "safety", title: "不具合レポート", cost: [{t:'tech', n:'写真投稿'}, {t:'tech', n:'デバッグツール'}, {t:'dial', n:'聞き取り'}], hp: 4, e1: "🚧", e2: "📸" },
+            { id: 6, cat: "safety", title: "水害アーカイブ", cost: [{t:'data', n:'浸水履歴'}, {t:'data', n:'古写真'}, {t:'dial', n:'聞き取り'}], hp: 4, e1: "🌊", e2: "📖" },
+            { id: 7, cat: "safety", title: "雪かき共有", cost: [{t:'dial', n:'WS'}, {t:'dial', n:'調整'}, {t:'tech', n:'地図API'}], hp: 4, e1: "⛄", e2: "📱" },
+            { id: 8, cat: "safety", title: "炊き出し案内", cost: [{t:'data', n:'避難所名簿'}, {t:'dial', n:'聞き取り'}], hp: 3, e1: "🚰", e2: "🍲" },
+            { id: 9, cat: "safety", title: "ペット避難ガイド", cost: [{t:'data', n:'避難所名簿'}, {t:'dial', n:'ヒアリング'}, {t:'dial', n:'対話テンプレート'}], hp: 4, e1: "🐕", e2: "🏕️" },
+            { id: 10, cat: "safety", title: "多言語誘導シート", cost: [{t:'data', n:'避難所名簿'}, {t:'dial', n:'やさしい日本語'}, {t:'tech', n:'翻訳ツール'}, {t:'tech', n:'PDF基盤'}, {t:'dial', n:'ヒアリング'}], hp: 7, e1: "🗣️", e2: "🌐", high: true },
+            { id: 11, cat: "life", title: "新ルール対応ゴミ分別検索", cost: [{t:'data', n:'ゴミ分別DB'}, {t:'tech', n:'新Ver対応キット'}, {t:'tech', n:'Webサイト'}], hp: 4, e1: "🗑️", e2: "🔍" },
+            { id: 12, cat: "life", title: "アレルギーチェック", cost: [{t:'data', n:'献立データ'}, {t:'tech', n:'アプリ基盤'}], hp: 3, e1: "🍛", e2: "🚫" },
+            { id: 13, cat: "life", title: "公園トイレマップ", cost: [{t:'data', n:'トイレデータ'}, {t:'tech', n:'写真投稿'}, {t:'dial', n:'聞き取り'}], hp: 4, e1: "🚼", e2: "🚻" },
+            { id: 14, cat: "life", title: "公衆Wi-Fiマップ", cost: [{t:'data', n:'Wi-Fiデータ'}, {t:'tech', n:'地図API'}], hp: 3, e1: "📶", e2: "📍" },
+            { id: 15, cat: "life", title: "ベンチマップ", cost: [{t:'data', n:'ベンチログ'}, {t:'dial', n:'聞き取り'}], hp: 3, e1: "🪑", e2: "☕" },
+            { id: 16, cat: "life", title: "直売所ナビ", cost: [{t:'data', n:'直売所リスト'}, {t:'tech', n:'Webサイト'}], hp: 3, e1: "🥕", e2: "🛒" },
+            { id: 17, cat: "life", title: "安全な公共施設リンク集", cost: [{t:'data', n:'URLリスト'}, {t:'tech', n:'セキュリティパッチ'}, {t:'tech', n:'Webサイト'}], hp: 4, e1: "🏛️", e2: "🔗" },
+            { id: 18, cat: "life", title: "放置自転車パトロール", cost: [{t:'data', n:'パトロールログ'}, {t:'dial', n:'聞き取り'}], hp: 3, e1: "🚲", e2: "👮" },
+            { id: 19, cat: "life", title: "遊具・砂場ガイド", cost: [{t:'data', n:'遊具データ'}, {t:'tech', n:'アプリ基盤'}, {t:'dial', n:'WS'}], hp: 4, e1: "🛝", e2: "🧸" },
+            { id: 20, cat: "life", title: "図書一括検索", cost: [{t:'data', n:'蔵書API'}, {t:'tech', n:'検索エンジン'}, {t:'tech', n:'アプリ基盤'}, {t:'tech', n:'Webサイト'}, {t:'dial', n:'調整'}, {t:'dial', n:'聞き取り'}], hp: 9, e1: "📚", e2: "🔍", high: true },
+            { id: 21, cat: "co_creation", title: "公園投稿サイト", cost: [{t:'tech', n:'地図API'}, {t:'tech', n:'Webフォーム'}, {t:'dial', n:'感謝のメッセージ'}], hp: 4, e1: "⛲", e2: "💭" },
+            { id: 22, cat: "co_creation", title: "地域イベントサイト", cost: [{t:'data', n:'URLリスト'}, {t:'tech', n:'Webサイト'}, {t:'dial', n:'調整'}], hp: 4, e1: "🎪", e2: "📅" },
+            { id: 23, cat: "co_creation", title: "やさしいゴミ案内", cost: [{t:'dial', n:'やさしい日本語'}, {t:'tech', n:'翻訳ツール'}, {t:'dial', n:'聞き取り'}], hp: 4, e1: "🔰", e2: "🗑️" },
+            { id: 24, cat: "co_creation", title: "街のうわさ検証サイト", cost: [{t:'data', n:'ファクトチェック用統計'}, {t:'tech', n:'写真投稿'}], hp: 3, e1: "📌", e2: "📸" },
+            { id: 25, cat: "co_creation", title: "10代の本音ポスト", cost: [{t:'dial', n:'ピザとビール'}, {t:'tech', n:'Webフォーム'}, {t:'tech', n:'アプリ基盤'}], hp: 4, e1: "📱", e2: "💬" },
+            { id: 26, cat: "co_creation", title: "お祭り手伝い募集", cost: [{t:'dial', n:'ボランティア募集'}, {t:'dial', n:'伝統行事の裏方'}], hp: 3, e1: "🏮", e2: "🤝" },
+            { id: 27, cat: "co_creation", title: "商店街図鑑", cost: [{t:'dial', n:'店主インタ'}, {t:'dial', n:'WS'}, {t:'tech', n:'写真投稿'}], hp: 4, e1: "🏪", e2: "👨‍🍳" },
+            { id: 28, cat: "co_creation", title: "街のトリセツ", cost: [{t:'dial', n:'地域ルール'}, {t:'dial', n:'聞き取り'}], hp: 3, e1: "📦", e2: "📖" },
+            { id: 29, cat: "co_creation", title: "昔のデジタル写真館", cost: [{t:'data', n:'古写真'}, {t:'tech', n:'デジタル化'}, {t:'dial', n:'聞き取り'}], hp: 4, e1: "🎞️", e2: "👴" },
+            { id: 30, cat: "co_creation", title: "お気に入り自慢マップ", cost: [{t:'data', n:'古写真'}, {t:'dial', n:'聞き取り'}, {t:'dial', n:'WS'}, {t:'tech', n:'地図API'}, {t:'tech', n:'アプリ基盤'}], hp: 7, e1: "⭐", e2: "🗺️", high: true }
+        ];
+
+        // --- 4. リソースデータ (60枚) ---
+        const resourceBaseData = [
+            { type: 'data', name: 'AED位置情報', sub: 'AED Location Data', desc: '街のどこに命を救う装置があるかの座標データ。', flav: 'いざという時の1分1秒を争う行動の根拠に。', e1: '🏥', e2: '📍', count: 2 },
+            { type: 'data', name: '避難所名簿(CSV)', sub: 'Shelter List', desc: '収容人数や設備、連絡先をまとめたリスト。', flav: '「どこに行けばいいか」を論理的に判断する。', e1: '🎒', e2: '📋', count: 2 },
+            { type: 'data', name: '街路樹・日影データ', sub: 'Shade Data', desc: '夏の日の歩行を助ける日影の分布データ。', flav: '涼しい道を選ぶことが、街歩きの質を変える。', e1: '🌳', e2: '☀️', count: 1 },
+            { type: 'data', name: 'バリアフリーデータ', sub: 'Barrier-free Data', desc: '段差や傾斜、多目的トイレの設置情報。', flav: 'すべての人が等しく移動できる街のために。', e1: '♿', e2: '🛣️', count: 1 },
+            { type: 'data', name: '浸水履歴データ', sub: 'Inundation History', desc: '過去の台風や大雨による浸水エリアの記録。', flav: '過去の教訓をデータとして未来へ繋ぐ。', e1: '🌊', e2: '📜', count: 1 },
+            { type: 'data', name: '街の古写真', sub: 'Old Photos Archive', desc: 'デジタル化された昔の街並みの画像データ。', flav: '「昔はこうだった」が、対話のきっかけになる。', e1: '🎞️', e2: '⏳', count: 2 },
+            { type: 'data', name: 'ゴミ分別DB', sub: 'Waste Sorting DB', desc: '品目ごとの詳細な分別ルールをまとめたDB。', flav: '5374（ゴミナシ）はここから始まる。', e1: '🗑️', e2: '💾', count: 1 },
+            { type: 'data', name: '給食献立データ', sub: 'School Lunch Data', desc: '市内の小中学校の給食メニューと成分データ。', flav: 'アレルギーを持つ子供たちへ安心を。', e1: '🍱', e2: '📄', count: 1 },
+            { type: 'data', name: 'トイレ位置データ', sub: 'Public Toilet Data', desc: '公園や公共施設のトイレ設置場所データ。', flav: '外出の不安を解消する、小さな、大切な情報。', e1: '🚻', e2: '📍', count: 1 },
+            { type: 'data', name: 'Wi-Fi位置データ', sub: 'Wi-Fi Spot Data', desc: '無料で使える公衆無線LANの設置場所。', flav: '繋がる場所を知ることは、現代の生存戦略。', e1: '📶', e2: '📍', count: 1 },
+            { type: 'data', name: 'ベンチ調査ログ', sub: 'Bench Survey Log', desc: '有志による街中の座れる場所の調査記録。', flav: '「休める場所」の可視化が、歩く街を作る。', e1: '🪑', e2: '📝', count: 1 },
+            { type: 'data', name: '直売所リスト', sub: 'Local Farm Shops', desc: '農家の無人販売所や直売所のリスト。', flav: '地産地消のハブをデータで結ぶ。', e1: '🥕', e2: '🛒', count: 1 },
+            { type: 'data', name: '施設URLリスト', sub: 'Facility URL List', desc: 'バラバラな公共施設の公式情報をまとめたリンク。', flav: '辿り着けない情報は、存在しないのと同じだ。', e1: '🏛️', e2: '🔗', count: 1 },
+            { type: 'data', name: 'パトロール日誌データ', sub: 'Patrol Log Data', desc: '防犯や交通安全の巡回記録を数値化したもの。', flav: '日々の見守りを、街の「安全度」として示す。', e1: '🚨', e2: '🖊️', count: 1 },
+            { type: 'data', name: '公園遊具データ', sub: 'Park Equipment Data', desc: 'どの公園に何の遊具があるかの詳細目録。', flav: '「今日は砂場がある公園に行こう」を叶える。', e1: '🛝', e2: '🧸', count: 1 },
+            { type: 'data', name: '図書館蔵書API', sub: 'Library Book API', desc: '本の貸出状況や検索ができるシステム窓口。', flav: '読みたい本と市民の距離を縮める。', e1: '📚', e2: '📡', count: 1 },
+            { type: 'data', name: 'ファクトチェック統計', sub: 'Fact Check Stats', desc: '公的機関による正確な統計値。', flav: 'デマを打ち消す最強の盾。', e1: '📉', e2: '✔️', count: 1 },
+            { type: 'tech', name: '地図API', sub: 'Map API', desc: '情報を地図上に描画するためのライブラリ。', flav: '位置という共通言語で、課題を統合する。', e1: '🗺️', e2: '⚙️', count: 4 },
+            { type: 'tech', name: 'Webフォーム', sub: 'Web Form System', desc: 'ユーザーの入力を安全に受け取る仕組み。', flav: '「声」をデジタルデータに変える玄関。', e1: '🗳️', e2: '📱', count: 2 },
+            { type: 'tech', name: 'Webサイト基盤', sub: 'Website Platform', desc: '情報を整理して公開するための共通枠組み。', flav: '誰もがアクセスできる情報の居場所。', e1: '💻', e2: '🏢', count: 2 },
+            { type: 'tech', name: 'スマホアプリ基盤', sub: 'Mobile App Framework', desc: '直感的な操作を提供するモバイル開発基盤。', flav: '市民のポケットに課題解決の道具を届ける。', e1: '📱', e2: '🛠️', count: 3 },
+            { type: 'tech', name: '写真投稿システム', sub: 'Photo Upload System', desc: '撮影した画像を位置情報と共に管理する。', flav: '「百聞は一見に如かず」をシステムで支える。', e1: '📸', e2: '☁️', count: 2 },
+            { type: 'tech', name: '検索エンジン', sub: 'Search Engine', desc: '膨大なデータから目的のものを探し出す。', flav: '知りたい時に、すぐ見つかる快感を作る。', e1: '🔍', e2: '⚙️', count: 1 },
+            { type: 'tech', name: '多言語翻訳ツール', sub: 'Translation Tool', desc: '機械翻訳を用いて情報を多言語化する。', flav: '言語の壁を、技術で超えていく。', e1: '🌐', e2: '🔤', count: 1 },
+            { type: 'tech', name: '印刷用PDF基盤', sub: 'PDF Rendering', desc: 'データを紙の掲示物として書き出す仕組み。', flav: 'デジタルに馴染みがない人へも届ける。', e1: '📄', e2: '🖨️', count: 1 },
+            { type: 'tech', name: 'デジタル化ツール', sub: 'Digitalize Tool', desc: 'アナログ資料をデータに変換するツール。', flav: '眠っていた記憶をデジタルへ。', e1: '💾', e2: '📸', count: 1 },
+            { type: 'tech', name: 'デバッグツール', sub: 'Debug Tool', desc: 'システムの不具合を発見・修正する。', flav: '完璧なものはない。直し続けることが大事だ。', e1: '🐛', e2: '🔧', count: 1 },
+            { type: 'tech', name: 'セキュリティパッチ', sub: 'Security Patch', desc: '脆弱性を塞ぎ、悪意からシステムを守る。', flav: '信頼は、堅実な守りから生まれる。', e1: '🛡️', e2: '🔒', count: 1 },
+            { type: 'tech', name: '新Ver対応キット', sub: 'Update Kit', desc: '最新の環境に対応するための更新セット。', flav: '技術の変化を乗りこなす。', e1: '🆙', e2: '📦', count: 1 },
+            { type: 'dial', name: '住民聞き取り', sub: 'Resident Interview', desc: '現場へ行き、生の声や悩みを収集する。', flav: 'データの背後にある「暮らし」に触れる。', e1: '👂', e2: '🏠', count: 4 },
+            { type: 'dial', name: 'ワークショップ', sub: 'Workshop', desc: '対等な立場で意見を出し合い合意を形成。', flav: '皆で考えたというプロセスが、納得を生む。', e1: '👥', e2: '💡', count: 3 },
+            { type: 'dial', name: 'キーマンとの調整', sub: 'Key Person Coordination', desc: '地域を動かす力を持つ人物と協力する。', flav: '信頼を得ることは、どの開発より難しい。', e1: '🔑', e2: '🤝', count: 3 },
+            { type: 'dial', name: 'やさしい日本語', sub: 'Plain Japanese', desc: '誰にでも伝わりやすい平易な表現への書き換え。', flav: '言葉を削ぎ落とすことが、優しさになる。', e1: '🗣️', e2: '🔰', count: 2 },
+            { type: 'dial', name: '伝統行事の裏方', sub: 'Traditional Helper', desc: '祭りの準備などを通じ地域に溶け込む。', flav: 'キーボードを置く時間が、最大の貢献になることも。', e1: '🏮', e2: '🧹', count: 1 },
+            { type: 'dial', name: '自治体ヒアリング', sub: 'Gov Hearing', desc: '行政側の制約や想いを共有してもらう。', flav: '官と民の「通訳」になるための対話。', e1: '🏛️', e2: '🎙️', count: 1 },
+            { type: 'dial', name: '対話テンプレート', sub: 'Dialogue Template', desc: '円滑に話し合いを進めるための共通ルール。', flav: '誰もが参加しやすい場を作る。', e1: '📋', e2: '🗣️', count: 1 },
+            { type: 'dial', name: '地域ルール調査', sub: 'Local Rule Survey', desc: 'その土地ならではの暗黙の了解をまとめる。', flav: '知れば安心できることもある。', e1: '📜', e2: '🔍', count: 1 },
+            { type: 'dial', name: '店主インタビュー', sub: 'Shop Owner Interview', desc: '商売人の生の声から街の歴史を紐解く。', flav: 'お店のファンを作ることが最大の応援。', e1: '🏪', e2: '🎤', count: 1 },
+            { type: 'dial', name: 'ボランティア募集案', sub: 'Volunteer Call', desc: '活動を手伝ってくれる仲間を集める。', flav: '熱意は伝染する。', e1: '🙋', e2: '📢', count: 1 },
+            { type: 'dial', name: 'ピザとビール', sub: 'Pizza & Beer', desc: 'リラックスした雰囲気で交流を深める。', flav: '肩書きを捨てて笑い合う、開発の原動力。', e1: '🍕', e2: '🍺', count: 1 },
+            { type: 'dial', name: '感謝のメッセージ', sub: 'Message of Thanks', desc: '活動に対する住民や利用者からの励まし。', flav: '報われる瞬間が、次への一歩を支える。', e1: '💌', e2: '✨', count: 1 }
+        ];
+
+        // --- デッキ構築 ---
+        const deck = [];
+        
+        regionData.forEach(r => deck.push({type: 'reg', data: r}));
+        for(let i=0; i<5; i++) deck.push({type: 'blank_reg'});
+
+        for(let i=0; i<4; i++) deck.push({type: 'sum'});
+
+        eventsData.forEach(e => deck.push({type: 'evt', id: e.id, data: e}));
+        for(let i=0; i<5; i++) deck.push({type: 'blank_evt'});
+
+        // HPカードを倍増させ、ペアにして登録
+        const hpTypes = [
+            {v: 1, c: 40, desc: '1点分としてカウント', flav: '小さな改善の積み重ね。', bgLightClass: 'bg-amber-50', borderClass: 'border-amber-200', textDarkClass: 'text-amber-800', textClass: 'text-amber-600', fromClass: 'from-amber-50'},
+            {v: 2, c: 20, desc: '2点分としてカウント', flav: '街の声が形になる喜び。', bgLightClass: 'bg-yellow-50', borderClass: 'border-yellow-200', textDarkClass: 'text-yellow-800', textClass: 'text-amber-500', fromClass: 'from-yellow-50'},
+            {v: 3, c: 40, desc: '3点分としてカウント', flav: '地域に目に見える変化を。', bgLightClass: 'bg-lime-50', borderClass: 'border-lime-200', textDarkClass: 'text-lime-800', textClass: 'text-lime-600', fromClass: 'from-lime-50'},
+            {v: 4, c: 20, desc: '4点分としてカウント', flav: '社会を動かす大きな一歩。', bgLightClass: 'bg-orange-50', borderClass: 'border-orange-200', textDarkClass: 'text-orange-800', textClass: 'text-orange-600', fromClass: 'from-orange-50'}
+        ];
+        
+        const hpList = [];
+        hpTypes.forEach(ht => {
+            for(let i=0; i<ht.c; i++) hpList.push({type: 'hp', val: ht.v, ...ht});
+        });
+
+        for(let i=0; i<hpList.length; i+=2) {
+            deck.push({type: 'hp_pair', card1: hpList[i], card2: hpList[i+1]});
+        }
+
+        projectsData.forEach(p => deck.push({type: 'prj', data: p}));
+        for(let i=0; i<5; i++) deck.push({type: 'blank_prj'});
+
+        let resCount = 1;
+        resourceBaseData.forEach(r => {
+            for(let i=0; i<r.count; i++) {
+                deck.push({type: 'res', id: resCount++, sub: r.type, data: r});
+            }
+        });
+        for(let i=0; i<5; i++) deck.push({type: 'blank_res'});
+
+        while (deck.length % 9 !== 0) { deck.push({type: 'empty'}); }
+
+        // ハーフサイズHPカード描画ヘルパー（表面）
+        function renderHalfHpCard(ht) {
+            return `
+            <div class="w-full h-full bg-white rounded-[10px] flex flex-col shadow-inner z-10 border-2 ${ht.borderClass} overflow-hidden relative">
+                <div class="absolute top-[4px] left-[4px] w-[24px] h-[24px] ${ht.bgLightClass} rounded-full flex flex-col items-center justify-center z-20 text-${ht.textDarkClass} shadow-sm border border-${ht.borderClass}">
+                    <span class="text-[12px] leading-none mb-0.5">✨</span><span class="text-[5px] font-black tracking-tighter">HP</span>
+                </div>
+                <div class="absolute bottom-[4px] right-[4px] w-[24px] h-[24px] ${ht.bgLightClass} rounded-full flex flex-col items-center justify-center z-20 text-${ht.textDarkClass} shadow-sm border border-${ht.borderClass}">
+                    <span class="text-[12px] leading-none mb-0.5 rotate-180">✨</span><span class="text-[5px] font-black tracking-tighter rotate-180">HP</span>
+                </div>
+                
+                <div class="${ht.bgLightClass} h-[24px] flex items-center justify-center text-[10px] font-black ${ht.textDarkClass} border-b ${ht.borderClass} uppercase tracking-widest px-8">Score</div>
+                <div class="flex-1 flex flex-col items-center justify-center bg-gradient-to-b ${ht.fromClass} to-white relative">
+                    <div class="absolute inset-0 pat-hp opacity-20"></div>
+                    <span class="text-[64px] font-black ${ht.textClass} leading-none drop-shadow-md relative z-10">${ht.val}</span>
+                    <span class="text-[10px] font-black ${ht.textClass} tracking-[0.2em] relative z-10 mt-1">HAPPINESS</span>
+                </div>
+                <div class="h-[44px] bg-white p-2 border-t-2 ${ht.borderClass} flex flex-col items-center justify-center relative z-10">
+                    <p class="text-[9px] text-slate-500 font-bold text-center leading-tight mb-0.5">${ht.flav}</p>
+                    <p class="text-[10px] ${ht.textClass} font-black text-center">【 ${ht.desc} 】</p>
+                </div>
+            </div>`;
+        }
+
+        // --- レンダリング (表面) ---
+        function renderFront(card) {
+            if (card.type === 'empty') return '';
+            
+            let content = '';
+
+            if (card.type === 'reg') {
+                const c = card.data;
+                content = `
+                <div class="w-full h-full rounded-[20px] p-[20px] bg-emerald-500 shadow-sm flex flex-col box-border relative">
+                    ${getBorderText()}
+                    <div class="relative w-full h-full bg-white rounded-[12px] overflow-hidden flex flex-col shadow-inner">
+                        <div class="absolute top-0 left-0 w-[40px] h-[40px] bg-emerald-500 rounded-br-[12px] flex flex-col items-center justify-center z-20 text-white">
+                            <span class="text-[16px] leading-none mb-0.5">${c.icon}</span><span class="text-[8px] font-black leading-none">REG</span>
+                        </div>
+                        <div class="absolute bottom-0 right-0 w-[40px] h-[40px] bg-emerald-500 rounded-tl-[12px] flex flex-col items-center justify-center z-20 text-white">
+                            <span class="text-[16px] leading-none mb-0.5 rotate-180">${c.icon}</span><span class="text-[8px] font-black leading-none rotate-180">REG</span>
+                        </div>
+                        <div class="bg-emerald-50 text-emerald-800 text-[9px] h-[40px] pl-[46px] pr-3 font-bold flex justify-between items-center border-b border-emerald-200">
+                            <span>PLAYER / 地域</span><span class="text-emerald-600">専門: ${c.exp}</span>
+                        </div>
+                        <div class="px-3 py-2 bg-gradient-to-b from-white to-emerald-50 border-b border-emerald-100">
+                            <p class="text-[9px] text-emerald-600 font-bold mb-0.5">${c.sub}</p>
+                            <h2 class="text-[18px] font-black text-slate-800 leading-tight">${c.title}</h2>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center bg-emerald-50/50 text-5xl">${c.icon}</div>
+                        <div class="h-[120px] bg-white p-2 border-t-2 border-emerald-200 flex flex-col gap-1.5 relative">
+                            <div class="flex-1 bg-emerald-50 border border-emerald-200 rounded p-1.5 flex flex-col justify-center mr-[42px]">
+                                <span class="text-[9px] font-bold text-emerald-800 mb-0.5 uppercase">● Ability</span>
+                                <p class="text-[9px] leading-tight font-medium text-slate-700">${c.abl}</p>
+                            </div>
+                            <div class="bg-red-50 border border-red-200 rounded p-1.5 h-[36px] mr-[42px] flex items-center gap-1">
+                                <span class="text-[9px] font-bold text-red-600 uppercase">▼ Weak</span>
+                                <p class="text-[7.5px] font-bold text-slate-600 leading-tight">${c.weak}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            else if (card.type === 'blank_reg') {
+                content = `
+                <div class="w-full h-full rounded-[20px] p-[20px] bg-emerald-500 shadow-sm flex flex-col box-border relative">
+                    ${getBorderText('text-white/50')}
+                    <div class="relative w-full h-full bg-white rounded-[12px] overflow-hidden flex flex-col shadow-inner">
+                        <div class="absolute top-0 left-0 w-[40px] h-[40px] bg-emerald-500 rounded-br-[12px] flex flex-col items-center justify-center z-20 text-white">
+                            <span class="text-[16px] leading-none mb-0.5">🚩</span><span class="text-[8px] font-black leading-none">REG</span>
+                        </div>
+                        <div class="bg-emerald-50 text-emerald-800/30 text-[9px] h-[40px] pl-[46px] pr-2 font-bold flex justify-between items-center border-b border-emerald-100">
+                            <span>オリジナル地域を記入...</span>
+                        </div>
+                        <div class="px-3 py-3 bg-white">
+                            <div class="blank-line w-full"></div>
+                        </div>
+                        <div class="flex-1 bg-slate-50 border-y border-slate-100 flex items-center justify-center">
+                            <span class="text-[10px] text-slate-200 font-bold">イラスト</span>
+                        </div>
+                        <div class="bg-white p-2 flex flex-col gap-1 h-[120px] relative">
+                            <div class="bg-slate-50 border border-dashed border-slate-200 rounded flex-1 flex flex-col p-1.5">
+                                <span class="text-[8px] text-emerald-400 font-bold">● 能力を記入</span>
+                            </div>
+                            <div class="bg-slate-50 border border-dashed border-slate-200 rounded h-[36px] flex flex-col p-1.5">
+                                <span class="text-[8px] text-red-400 font-bold">▼ 弱点を記入</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            else if (card.type === 'sum') {
+                content = `
+                <div class="w-full h-full rounded-[20px] p-[20px] bg-[#334155] text-white flex flex-col border-[4px] border-slate-500 box-border relative">
+                    <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 15px 15px"></div>
+                    <div class="relative z-10 flex flex-col h-full gap-1">
+                        <div class="text-center border-b border-slate-500 pb-1.5 mb-0.5">
+                            <h2 class="text-[14px] font-black tracking-widest text-slate-300 uppercase leading-none">Game Summary</h2>
+                        </div>
+                        <div class="">
+                            <p class="text-[9px] font-black text-amber-400 mb-1 leading-none">▶ 自分の番：2アクション選択</p>
+                            <ul class="text-[8px] space-y-1 bg-slate-800/50 p-1.5 rounded-lg border border-slate-600">
+                                <li><span class="font-bold text-white">● 調査：</span> 山札から2枚引く</li>
+                                <li><span class="font-bold text-white">● 支援：</span> 他人へ手札提供（<span class="text-amber-400 font-bold">+2 HP</span>）</li>
+                                <li><span class="font-bold text-white">● 解決：</span> 手札を支払いPJ達成</li>
+                                <li class="text-blue-300 font-bold">● 参画：<span class="text-[7.5px] font-medium ml-1">共有リソースに2枚×2列を再セット(中心エリア)</span></li>
+                            </ul>
+                        </div>
+                        <div class="">
+                            <p class="text-[9px] font-black text-emerald-400 mb-1 leading-none">▶ PJ解決直後の選択</p>
+                            <div class="grid grid-cols-2 gap-1.5 text-[8px] leading-tight">
+                                <div class="bg-slate-800 p-1.5 rounded border border-slate-600"><span class="font-bold text-white block text-center mb-0.5">独占</span>HP満額 / 不満<span class="text-red-400">+1</span><br><span class="text-[7px] text-slate-400 mt-0.5 block text-center">(4-5Rは担い手不足で<span class="text-red-400">+2</span>)</span></div>
+                                <div class="bg-emerald-900/20 p-1.5 rounded border border-emerald-700"><span class="font-bold text-white block text-center mb-0.5">公開</span>HP<span class="text-emerald-400">-1</span> / 不満<span class="text-emerald-400">-1</span><br><span class="text-[6.5px] text-emerald-200/70 mt-0.5 block text-center">裏返し、上に1HP×3枚(1列)を置く。</span></div>
+                            </div>
+                        </div>
+                        <div class="">
+                            <p class="text-[9px] font-black text-amber-400 mb-1 leading-none">▶ 共有リソースの利用と感謝</p>
+                            <div class="bg-slate-700/50 p-1.5 rounded text-[7px] leading-tight border border-slate-600">
+                                <p>1PJにつき1枚まで<span class="font-bold text-white">手札やコストを消費せず</span>利用可能（高難度は自1他1の計2枚まで）。</p>
+                                <p class="mt-0.5 text-amber-300">利用時、上のHPから公開者等へ1HP。(2列ならコミッターにも1HP)</p>
+                                <p class="mt-0.5 text-red-300">※上のHPが尽きると「有用期限切れ」となり捨て札へ。</p>
+                            </div>
+                        </div>
+                        <div class="">
+                            <p class="text-[9px] font-black text-red-400 mb-1 leading-none">▶ ラウンド終了時</p>
+                            <div class="bg-red-900/20 p-1.5 rounded border border-red-800/30 text-[8px] leading-tight">
+                                <p class="text-red-100 mb-1"><span class="font-bold">① イベント:</span> 期限切れリソースは条件に含めない。</p>
+                                <p class="text-red-100"><span class="font-bold">② 社会の縮小:</span> 不満 <span class="font-bold text-red-300">+1</span>。<span class="text-[7px] text-red-300 font-bold ml-1">(4-5Rは担い手不足で+2)</span></p>
+                            </div>
+                        </div>
+                        <div class="bg-sky-900/40 p-1.5 rounded border border-sky-500/50 mt-auto flex justify-between items-center">
+                            <span class="text-[9px] font-black text-sky-300 uppercase">Game Goal</span>
+                            <span class="text-[8px] text-white">5R完走 / <span class="text-amber-300 font-bold">HP最多勝利</span></span>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            else if (card.type === 'evt') {
+                const e = card.data;
+                content = `
+                <div class="w-full h-full rounded-[20px] p-[20px] bg-red-600 shadow-sm flex flex-col box-border relative">
+                    ${getBorderText()}
+                    <div class="relative w-full h-full bg-white rounded-[12px] flex flex-col shadow-inner z-10 border-2 border-red-700 overflow-hidden">
+                        <div class="absolute top-0 left-0 w-[40px] h-[40px] bg-red-600 rounded-br-[12px] flex flex-col items-center justify-center text-white">
+                            <span class="text-[16px] leading-none mb-0.5">⚠️</span><span class="text-[8px] font-black tracking-tighter">EVT</span>
+                        </div>
+                        <div class="absolute bottom-0 right-0 w-[40px] h-[40px] bg-red-600 rounded-tl-[12px] flex flex-col items-center justify-center text-white">
+                            <span class="text-[16px] leading-none mb-0.5 rotate-180">⚠️</span><span class="text-[8px] font-black tracking-tighter rotate-180">EVT</span>
+                        </div>
+                        <div class="bg-red-50 text-red-800 text-[9px] h-[40px] pl-[46px] pr-3 font-bold flex justify-between items-center border-b border-red-200">
+                            <span>広域課題（イベント）</span><span class="bg-red-600 text-white px-1.5 py-0.5 rounded-sm">No.${card.id}</span>
+                        </div>
+                        <div class="px-3 py-2 bg-red-50/50 border-b border-red-100">
+                            <h2 class="text-[16px] font-black text-slate-800 leading-tight">${e.title}</h2>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center text-5xl bg-red-50/30 relative overflow-hidden">
+                            <div class="absolute inset-0 pat-event opacity-20"></div>
+                            <span class="relative z-10 drop-shadow-sm">${e.e1}${e.e2}</span>
+                        </div>
+                        <div class="p-2 border-t-2 border-red-200 bg-white h-[130px] flex flex-col">
+                            <p class="text-[9px] font-bold text-slate-700 mb-0.5">【解決条件 (OR条件含む)】</p>
+                            <p class="text-[7.5px] leading-snug text-slate-600 mb-1 font-bold">${e.condition}</p>
+                            <div class="bg-red-50 p-1.5 rounded mb-1 text-[8px] text-slate-700 mr-[42px]"><span class="text-red-600 font-bold">失敗時: </span>${e.fail}</div>
+                            <div class="bg-slate-800 text-white p-1.5 rounded text-[7px] font-medium leading-snug mr-[42px] flex-1 flex flex-col justify-center">
+                                <div><span class="text-amber-400 font-bold">成功 / ボーナス: </span><br>${e.bonus}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            else if (card.type === 'blank_evt') {
+                content = `
+                <div class="w-full h-full rounded-[20px] p-[20px] bg-red-600 shadow-sm flex flex-col box-border relative">
+                    ${getBorderText('text-white/50')}
+                    <div class="relative w-full h-full bg-white rounded-[12px] flex flex-col shadow-inner z-10 border-2 border-red-700 overflow-hidden">
+                        <div class="absolute top-0 left-0 w-[40px] h-[40px] bg-red-600 rounded-br-[12px] flex flex-col items-center justify-center z-20 text-white">
+                            <span class="text-[16px] leading-none mb-0.5">⚠️</span><span class="text-[8px] font-black tracking-tighter">EVT</span>
+                        </div>
+                        <div class="absolute bottom-0 right-0 w-[40px] h-[40px] bg-red-600 rounded-tl-[12px] flex flex-col items-center justify-center z-20 text-white">
+                            <span class="text-[16px] leading-none mb-0.5 rotate-180">⚠️</span><span class="text-[8px] font-black tracking-tighter rotate-180">EVT</span>
+                        </div>
+                        <div class="bg-red-50 text-red-800/30 text-[9px] h-[40px] pl-[46px] pr-3 font-bold flex items-center border-b border-red-200">
+                            広域課題を自由に作成...
+                        </div>
+                        <div class="px-3 py-3 bg-white border-b border-red-100">
+                            <div class="blank-line w-full"></div>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center bg-red-50/10">
+                            <span class="text-[10px] text-red-200 font-bold">イラスト</span>
+                        </div>
+                        <div class="p-2 border-t-2 border-red-200 bg-white h-[130px] flex flex-col">
+                            <div class="text-[8px] font-bold text-red-300">解決条件:</div>
+                            <div class="blank-line h-4"></div>
+                            <div class="bg-slate-800/10 border border-dashed border-slate-200 p-2 rounded flex-1 mt-1 flex flex-col justify-center mr-[42px]">
+                                <span class="text-[7px] text-red-300 font-bold block mb-1">▼ 失敗時のペナルティ</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            else if (card.type === 'hp_pair') {
+                content = `
+                <div class="w-full h-full rounded-[20px] bg-yellow-400 shadow-sm flex flex-col box-border relative overflow-hidden">
+                    <div class="absolute top-[196px] left-0 right-0 h-[8px] flex items-center justify-between px-2 z-30">
+                        <span class="text-[8px] text-yellow-800/80">✂</span>
+                        <div class="flex-1 border-t border-dashed border-yellow-800/50 mx-1"></div>
+                        <span class="text-[8px] text-yellow-800/80">✂</span>
+                    </div>
+                    <div class="absolute top-0 left-0 right-0 h-[196px] p-[10px]">
+                        ${renderHalfHpCard(card.card1)}
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-[196px] p-[10px]">
+                        ${renderHalfHpCard(card.card2)}
+                    </div>
+                </div>`;
+            }
+
+            else if (card.type === 'prj') {
+                const c = card.data;
+                const catInfo = c.cat === 'safety' ? { n: '🛡️ あんしん・街づくり', e: '安全基盤データ (🛡️)' } :
+                                c.cat === 'life' ? { n: '💡 くらし・利便性', e: '生活システム基盤 (💻)' } :
+                                { n: '🤝 つながり・共創', e: '対話テンプレート (🤝)' };
+                
+                const costHtml = c.cost.map((res, i) => `
+                    <span class="bg-slate-100 border border-slate-300 text-slate-700 text-[${c.high ? '7.5px' : '8.5px'}] px-1 py-0.5 rounded shadow-sm font-bold flex items-center">
+                        <span class="text-slate-600 mr-0.5">${res.t==='data'?'🛡️':res.t==='tech'?'💻':'🤝'}</span> ${res.n}
+                    </span>
+                    ${i < c.cost.length - 1 ? `<span class="text-slate-400 text-[10px] font-bold">+</span>` : ''}
+                `).join('');
+
+                content = `
+                <div class="w-full h-full rounded-[20px] p-[20px] bg-sky-500 shadow-sm flex flex-col box-border relative">
+                    ${getBorderText()}
+                    <div class="relative w-full h-full bg-white rounded-[12px] flex flex-col shadow-inner z-10 border-2 border-sky-600 overflow-hidden">
+                        <div class="absolute top-0 left-0 w-[40px] h-[40px] bg-sky-500 rounded-br-[12px] flex flex-col items-center justify-center z-20 text-white">
+                            <span class="text-[16px] leading-none mb-0.5">🏘️</span><span class="text-[8px] font-black tracking-tighter">PRJ</span>
+                        </div>
+                        <div class="absolute bottom-0 right-0 w-[40px] h-[40px] bg-sky-500 rounded-tl-[12px] flex flex-col items-center justify-center z-20 text-white">
+                            <span class="text-[16px] leading-none mb-0.5 rotate-180">🏘️</span><span class="text-[8px] font-black tracking-tighter rotate-180">PRJ</span>
+                        </div>
+                        <div class="bg-sky-50 text-sky-800 text-[9px] h-[40px] pl-[46px] pr-2 font-bold flex justify-between items-center border-b border-sky-200">
+                            <span>${catInfo.n}</span><span class="bg-sky-500 text-white px-1.5 py-0.5 rounded-sm">No.${c.id}</span>
+                        </div>
+                        <div class="px-3 py-2 bg-white">
+                            <h2 class="text-[15px] font-black text-slate-800 leading-tight">${c.title}</h2>
+                        </div>
+                        <div class="px-3 pb-2 bg-white border-b border-slate-100">
+                            <div class="text-[8px] text-slate-500 font-bold mb-1">解決リソース</div>
+                            <div class="flex flex-wrap gap-1 items-center leading-none">${costHtml}</div>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center text-4xl bg-slate-50 relative overflow-hidden">
+                            ${c.high ? `<div class="absolute top-1 right-1 bg-amber-100 border border-amber-400 rounded px-1.5 py-1 flex flex-col items-center z-10 shadow-sm"><span class="text-[9px] font-black text-amber-800 tracking-wider">高難度</span><span class="text-[5.5px] font-bold text-amber-700 mt-0.5">共有特例:自1+他1</span></div>` : ''}
+                            <span class="relative z-10 drop-shadow-sm">${c.e1}${c.e2}</span>
+                        </div>
+                        <div class="p-2 bg-white h-[95px] flex flex-col gap-1 relative">
+                            <div class="flex items-center justify-between bg-sky-50 rounded border border-sky-100 p-1 mr-[42px]">
+                                <span class="text-[9px] font-bold text-sky-800">獲得ハピネス</span>
+                                <div class="flex items-baseline gap-1"><span class="text-sm font-black text-sky-600">${c.hp}</span><span class="text-[8px] text-slate-400">(公開: ${c.hp-1})</span></div>
+                            </div>
+                            <div class="bg-slate-800 text-white rounded p-1 flex flex-col justify-center flex-1 overflow-hidden mr-[42px]">
+                                <span class="text-[8px] font-bold text-sky-400 mb-0.5">▼ 解決後、公開(裏返)で</span>
+                                <p class="text-[7.5px] leading-tight font-medium text-slate-100">共有リソース <span class="text-slate-300 font-bold">${catInfo.e}</span> になる。<br>上に1HP×3枚を置く。独占は不満+1(後+2)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            else if (card.type === 'blank_prj') {
+                content = `
+                <div class="w-full h-full rounded-[20px] p-[20px] bg-sky-500 shadow-sm flex flex-col box-border relative">
+                    ${getBorderText('text-white/50')}
+                    <div class="relative w-full h-full bg-white rounded-[12px] flex flex-col shadow-inner z-10 border-2 border-sky-600 overflow-hidden">
+                        <div class="absolute top-0 left-0 w-[40px] h-[40px] bg-sky-500 rounded-br-[12px] flex flex-col items-center justify-center z-20 text-white">
+                            <span class="text-[16px] leading-none mb-0.5">🏘️</span><span class="text-[8px] font-black tracking-tighter">PRJ</span>
+                        </div>
+                        <div class="absolute bottom-0 right-0 w-[40px] h-[40px] bg-sky-500 rounded-tl-[12px] flex flex-col items-center justify-center z-20 text-white">
+                            <span class="text-[16px] leading-none mb-0.5 rotate-180">🏘️</span><span class="text-[8px] font-black tracking-tighter rotate-180">PRJ</span>
+                        </div>
+                        <div class="bg-sky-50 text-sky-800/30 text-[9px] h-[40px] pl-[46px] pr-2 font-bold flex justify-between items-center border-b border-sky-100">
+                            <span>カテゴリーを記入...</span><span>No. __</span>
+                        </div>
+                        <div class="px-3 py-3 bg-white">
+                            <div class="blank-line w-full"></div>
+                        </div>
+                        <div class="px-3 pb-2 bg-white border-b border-slate-100">
+                            <div class="text-[8px] text-slate-300 font-bold mb-1">必要リソース</div>
+                            <div class="flex gap-2">
+                                <div class="w-8 h-8 rounded border-2 border-dashed border-slate-200"></div>
+                                <div class="w-8 h-8 rounded border-2 border-dashed border-slate-200"></div>
+                            </div>
+                        </div>
+                        <div class="flex-1 bg-slate-50 flex items-center justify-center">
+                            <span class="text-[10px] text-slate-200 font-bold">イラスト</span>
+                        </div>
+                        <div class="p-2 bg-white h-[95px] flex flex-col gap-1 relative">
+                            <div class="flex items-center justify-between bg-sky-50/50 rounded border border-sky-100 p-1 mr-[42px]">
+                                <span class="text-[9px] font-bold text-sky-800/40">獲得ハピネス</span>
+                                <span class="text-[10px] font-black text-sky-200">__ HP</span>
+                            </div>
+                            <div class="bg-slate-800/10 border border-dashed border-slate-200 rounded flex-1 flex items-center justify-center mr-[42px]">
+                                <span class="text-[8px] text-slate-400 font-bold">共有リソース効果を記入</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            else if (card.type === 'res') {
+                const c = card.data;
+                const e1 = c.e1 || '📦';
+                const e2 = c.e2 || '✨';
+                const patId = `pat-${card.type}-${card.id}-${Math.random().toString(36).substr(2, 9)}`;
+                
+                const cfg = card.sub === 'data' ? { 
+                    c: 'text-sky-500', t: 'DAT', i: '🛡️', n: 'データ', 
+                    cl: 'bg-sky-50 text-sky-800 border-sky-200', 
+                    path: shapePath.data, patName: 'dot', patColor: '#0ea5e9', iconBorder: 'border-sky-200' 
+                } : card.sub === 'tech' ? { 
+                    c: 'text-purple-600', t: 'TEC', i: '💻', n: '技術', 
+                    cl: 'bg-purple-50 text-purple-800 border-purple-200', 
+                    path: shapePath.tech, patName: 'circuit', patColor: '#9333ea', iconBorder: 'border-purple-200' 
+                } : { 
+                    c: 'text-emerald-500', t: 'DIA', i: '🤝', n: '対話', 
+                    cl: 'bg-emerald-50 text-emerald-800 border-emerald-200', 
+                    path: shapePath.dial, patName: 'wave', patColor: '#10b981', iconBorder: 'border-emerald-200' 
+                };
+
+                content = `
+                <div class="w-full h-full rounded-[20px] p-[20px] bg-slate-700 shadow-sm flex flex-col box-border relative">
+                    ${getBorderText()}
+                    <div class="relative w-full h-full bg-white rounded-[12px] flex flex-col shadow-inner z-10 border-2 border-slate-300 overflow-hidden">
+                        <div class="absolute top-0 left-0 w-[44px] h-[44px] z-20">
+                            <svg class="absolute inset-0 ${cfg.c} drop-shadow-sm" fill="currentColor" viewBox="0 0 44 44"><path d="${cfg.path}"/></svg>
+                            <div class="relative w-full h-full flex flex-col items-center justify-center pb-1 pr-1 text-white">
+                                <span class="text-[16px] leading-none mb-0.5">${cfg.i}</span><span class="text-[8px] font-black">${cfg.t}</span>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-0 right-0 w-[44px] h-[44px] z-20 rotate-180">
+                            <svg class="absolute inset-0 ${cfg.c} drop-shadow-sm" fill="currentColor" viewBox="0 0 44 44"><path d="${cfg.path}"/></svg>
+                            <div class="relative w-full h-full flex flex-col items-center justify-center pb-1 pr-1 text-white">
+                                <span class="text-[16px] leading-none mb-0.5">${cfg.i}</span><span class="text-[8px] font-black">${cfg.t}</span>
+                            </div>
+                        </div>
+                        <div class="${cfg.cl} text-[10px] h-[40px] pl-[48px] pr-3 font-bold flex items-center border-b">${cfg.n}リソース</div>
+                        <div class="px-3 py-2 border-b border-slate-100">
+                            <h2 class="text-[16px] font-black text-slate-800 leading-none">${c.name}</h2>
+                            <p class="text-[8px] text-slate-500 font-bold mt-0.5">${c.sub}</p>
+                        </div>
+                        
+                        <div class="flex-1 flex items-center justify-center relative overflow-hidden bg-slate-50/20 text-${cfg.c.replace('text-', '')}">
+                            <div class="absolute inset-0">
+                                <svg width="100%" height="100%">
+                                    <defs>${getPatternDef(cfg.patName, cfg.patColor, patId)}</defs>
+                                    <rect width="100%" height="100%" fill="url(#${patId})"></rect>
+                                </svg>
+                            </div>
+                            <div class="bg-white/80 p-3 rounded-full backdrop-blur-sm z-10 drop-shadow border ${cfg.iconBorder} relative w-[72px] h-[72px] flex items-center justify-center">
+                                <span class="text-[40px] absolute -mt-1 -ml-1 drop-shadow-sm">${e1}</span>
+                                <div class="absolute -bottom-1 -right-1 w-7 h-7 bg-white rounded-full border-2 ${cfg.iconBorder} flex items-center justify-center shadow-sm">
+                                    <span class="text-[12px]">${e2}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="h-[105px] bg-white p-3 border-t-2 ${cfg.ib} flex flex-col z-10">
+                            <p class="text-[10px] text-slate-700 leading-snug font-medium">${c.desc}</p>
+                            <div class="mt-auto bg-slate-50 p-1.5 rounded border border-slate-100 mr-[42px]">
+                                <p class="text-[8px] text-slate-500 italic leading-tight">「${c.flav}」</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            else if (card.type === 'blank_res') {
+                content = `
+                <div class="w-full h-full rounded-[20px] p-[20px] bg-slate-700 shadow-sm flex flex-col box-border relative">
+                    ${getBorderText('text-white/50')}
+                    <div class="relative w-full h-full bg-white rounded-[12px] flex flex-col shadow-inner z-10 border-2 border-slate-300 overflow-hidden">
+                        <div class="absolute top-0 left-0 w-[40px] h-[40px] border-r border-b border-dashed border-slate-300 rounded-br-[12px] flex flex-col items-center justify-center z-20">
+                            <span class="text-[8px] font-black text-slate-300 leading-none">TYPE</span>
+                        </div>
+                        <div class="bg-slate-50 text-slate-400 text-[9px] h-[40px] pl-[46px] pr-3 font-bold flex items-center border-b border-slate-200">
+                            種類を選択... (デ/技/対)
+                        </div>
+                        <div class="px-3 py-3 bg-white border-b border-slate-100">
+                            <div class="blank-line w-full"></div>
+                        </div>
+                        <div class="flex-1 bg-white flex items-center justify-center border-b border-slate-100">
+                            <div class="w-16 h-16 rounded-full border-2 border-dashed border-slate-200 flex items-center justify-center"><span class="text-[10px] text-slate-200 font-bold">ILLUST</span></div>
+                        </div>
+                        <div class="h-[105px] bg-white p-3 flex flex-col">
+                            <div class="blank-line w-full"></div>
+                            <div class="blank-line w-full"></div>
+                            <div class="mt-auto bg-slate-50 border border-slate-100 rounded p-2 text-center mr-[42px]">
+                                <span class="text-[8px] text-slate-300 font-bold italic">フレーバーテキスト</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            return content;
+        }
+
+        // ----------------------------------------------------
+        // 3. レンダリング関数 (裏面)
+        // ----------------------------------------------------
+        function renderBack(card) {
+            if (!card) return '';
+            const wrap = (content) => `<div class="content-scale">${content}</div>`;
+            
+            // --- プロジェクトカードの裏面（共有リソースデザイン） ---
+            if (card.type === 'prj' || card.type === 'blank_prj') {
+                const cat = card.cat || (card.data && card.data.cat) || 'safety';
+                const patId = `pat-back-${card.type}-${card.id || 'blank'}-${Math.random().toString(36).substr(2, 9)}`;
+                
+                const sc = (cat === 'safety' || cat === 'data') ? { 
+                    c: 'text-sky-500', t: 'DAT', i: '🛡️', n: 'データ', header: '共有データリソース', title: '安全・基盤データ', 
+                    path: shapePath.data, patName: 'dot', patColor: '#0ea5e9',
+                    cl: 'bg-sky-50 text-sky-800 border-sky-200', ib: 'border-sky-200'
+                } :
+                (cat === 'life' || cat === 'tech') ? { 
+                    c: 'text-purple-600', t: 'TEC', i: '💻', n: '技術', header: '共有技術リソース', title: '生活システム基盤', 
+                    path: shapePath.tech, patName: 'circuit', patColor: '#9333ea',
+                    cl: 'bg-purple-50 text-purple-800 border-purple-200', ib: 'border-purple-200'
+                } :
+                { 
+                    c: 'text-emerald-500', t: 'DIA', i: '🤝', n: '対話', header: '共有対話リソース', title: '対話ノウハウ', 
+                    path: shapePath.dial, patName: 'wave', patColor: '#10b981',
+                    cl: 'bg-emerald-50 text-emerald-800 border-emerald-200', ib: 'border-emerald-200'
+                };
+
+                if (card.type === 'blank_prj') {
+                    sc.c = 'text-sky-500'; sc.t = 'ANY'; sc.i = '🌐'; sc.n = '任意'; sc.header = '共有リソース'; sc.title = '共有基盤 (ブランク)';
+                    sc.path = shapePath.data; sc.patName = 'dot'; sc.patColor = '#0ea5e9';
+                    sc.cl = 'bg-sky-50 text-sky-800 border-sky-200'; sc.ib = 'border-sky-200';
+                }
+
+                return wrap(`
+                <div class="w-[280px] h-[400px] rounded-[20px] p-[20px] bg-slate-700 shadow-sm flex flex-col box-border relative">
+                    ${getBorderText('text-white/50')}
+                    <div class="relative w-full h-full bg-white rounded-[12px] flex flex-col shadow-inner z-10 border-2 border-slate-300 overflow-hidden">
+                        
+                        <div class="absolute top-0 left-0 w-[44px] h-[44px] z-20">
+                            <svg class="absolute inset-0 ${sc.c} drop-shadow-sm" fill="currentColor" viewBox="0 0 44 44"><path d="${sc.path}"/></svg>
+                            <div class="relative w-full h-full flex flex-col items-center justify-center pb-1 pr-1 text-white">
+                                <span class="text-[16px] leading-none mb-0.5">${sc.i}</span><span class="text-[8px] font-black">${sc.t}</span>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-0 right-0 w-[44px] h-[44px] z-20 rotate-180">
+                            <svg class="absolute inset-0 ${sc.c} drop-shadow-sm" fill="currentColor" viewBox="0 0 44 44"><path d="${sc.path}"/></svg>
+                            <div class="relative w-full h-full flex flex-col items-center justify-center pb-1 pr-1 text-white">
+                                <span class="text-[16px] leading-none mb-0.5">${sc.i}</span><span class="text-[8px] font-black">${sc.t}</span>
+                            </div>
+                        </div>
+
+                        <div class="${sc.cl} text-[10px] h-[40px] pl-[48px] pr-3 font-bold flex items-center border-b">
+                            ${sc.header}
+                        </div>
+
+                        <div class="px-3 py-2 border-b border-slate-100 bg-white">
+                            <p class="text-[8px] text-slate-500 font-bold mb-0.5">オープン化された</p>
+                            <h2 class="text-[16px] font-black text-slate-800 leading-none">${sc.title}</h2>
+                        </div>
+
+                        <div class="flex-1 flex flex-col items-center justify-center relative overflow-hidden bg-slate-50/20 text-${sc.c.replace('text-', '')}">
+                            <div class="absolute inset-0">
+                                <svg width="100%" height="100%">
+                                    <defs>${getPatternDef(sc.patName, sc.patColor, patId)}</defs>
+                                    <rect width="100%" height="100%" fill="url(#${patId})"></rect>
+                                </svg>
+                            </div>
+                            <div class="bg-white/80 p-3 rounded-full backdrop-blur-sm z-10 drop-shadow border ${sc.ib} relative w-[72px] h-[72px] flex items-center justify-center text-[40px]">
+                                ${sc.i}
+                            </div>
+                        </div>
+
+                        <div class="h-[105px] bg-white p-3 border-t-2 ${sc.ib} flex flex-col z-10">
+                            <p class="text-[10px] text-slate-700 leading-snug font-medium">
+                                このカードは <span class="font-bold ${sc.c}">【${sc.n}】</span>リソース1枚分の代用 として誰でも使用できます。
+                            </p>
+                            <div class="mt-auto bg-slate-50 p-1.5 rounded border border-slate-200 mr-[42px]">
+                                <span class="text-[8px] font-bold text-slate-600 mb-0.5 block">【利用と継続的感謝】</span>
+                                <p class="text-[7px] text-slate-500 leading-tight">1PJにつき1枚まで手札消費なしで利用可。利用時、上のHPから公開者等へ1HP。HPが尽きたら捨て札。</p>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>`);
+            }
+
+            // --- HPカードの裏面（ハーフサイズ2枚組対応） ---
+            else if (card.type === 'hp_pair') {
+                const backSvg = (cClass) => `
+                    <div class="w-full h-full border-2 border-white rounded-[8px] flex flex-col items-center justify-center relative overflow-hidden bg-slate-800/10">
+                        <div class="absolute inset-0 pat-hp opacity-50"></div>
+                        <div class="absolute inset-0 flex items-center justify-center ${cClass} z-0">
+                            <svg width="260" height="176" viewBox="0 0 260 176" fill="none">
+                                <path d="M130 50 L160 70 V110 L130 130 L100 110 V70 Z" fill="white"/>
+                                <path d="M130 100 C120 100 115 90 115 85 M145 85 C145 90 140 100 130 100" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                <circle cx="122" cy="80" r="2" fill="currentColor"/>
+                                <circle cx="138" cy="80" r="2" fill="currentColor"/>
+                            </svg>
+                        </div>
+                        <div class="absolute bottom-2 w-full text-center z-20">
+                            <span class="text-white font-black tracking-[0.2em] text-[8px] opacity-90 drop-shadow-md">HAPPINESS POINTS</span>
+                        </div>
+                    </div>`;
+
+                return wrap(`
+                <div class="w-[280px] h-[400px] rounded-[20px] bg-yellow-400 flex flex-col box-border border-[6px] border-yellow-400 relative overflow-hidden">
+                    <div class="absolute top-[188px] left-[-6px] right-[-6px] h-[12px] flex items-center justify-center z-30">
+                        <span class="text-[8px] text-yellow-800/80 mr-1">✂</span>
+                        <div class="w-full border-t border-dashed border-yellow-800/50"></div>
+                        <span class="text-[8px] text-yellow-800/80 ml-1">✂</span>
+                    </div>
+
+                    <div class="absolute top-0 left-0 right-0 h-[188px] p-[4px]">
+                        ${backSvg(card.card1.textClass || 'text-amber-600')}
+                    </div>
+                    
+                    <div class="absolute bottom-0 left-0 right-0 h-[188px] p-[4px]">
+                        ${backSvg(card.card2.textClass || 'text-amber-600')}
+                    </div>
+                </div>`);
+            }
+
+            // --- プロジェクト以外は幾何学模様のシンプル裏面 ---
+            let bg = "bg-slate-800", border = "border-slate-700", innerBorder = "border-slate-600", text = "CIVIC TECH TOWN", svgContent = "", bgDeco = "", coloredLines = "", htmlContent = "";
+            let colorClass = "text-white";
+            
+            if(card.type === 'reg' || card.type === 'blank_reg') {
+                bg="bg-emerald-500"; border="border-emerald-500"; innerBorder="border-white"; text="REGION BASE";
+                svgContent=`<path d="M140 200 L60 80 M140 200 L220 80 M140 200 L60 320 M140 200 L220 320" stroke="white" stroke-width="2" stroke-dasharray="6 6" opacity="0.4"/><path d="M140 155 L179 177.5 V222.5 L140 245 L101 222.5 V177.5 Z" fill="white"/><path d="M140 185 L150 195 H130 L140 185Z" fill="#10b981"/><rect x="133" y="195" width="14" height="12" fill="#10b981"/><circle cx="140" cy="218" r="4" fill="#10b981"/>`;
+                bgDeco=`<div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(rgba(255, 255, 255, 0.7) 1px, transparent 1px); background-size: 20px 20px;"></div>`;
+            } 
+            else if(card.type === 'res' || card.type === 'blank_res') {
+                const sub = card.sub || 'data';
+                if(sub === 'data') { innerBorder="border-sky-400"; text="RESOURCE / DATA"; svgContent=`<path d="M140 200 L240 100 M40 300 L140 200" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.4"/><circle cx="240" cy="100" r="4" fill="#38bdf8" opacity="0.6"/><circle cx="40" cy="300" r="4" fill="#38bdf8" opacity="0.6"/><path d="M140 155 L180 177.5 V222.5 L140 245 L100 222.5 V177.5 Z" fill="#38bdf8"/><rect x="122" y="205" width="6" height="12" fill="white"/><rect x="132" y="195" width="6" height="22" fill="white"/><rect x="142" y="200" width="6" height="17" fill="white"/>`; }
+                else if(sub === 'tech') { innerBorder="border-purple-400"; text="RESOURCE / TECH"; svgContent=`<path d="M40 100 L240 300" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.4"/><circle cx="40" cy="100" r="4" fill="#a855f7" opacity="0.6"/><circle cx="240" cy="300" r="4" fill="#a855f7" opacity="0.6"/><path d="M140 155 L180 177.5 V200 L160 220 L140 245 L100 222.5 V177.5 Z" fill="#a855f7"/><rect x="128" y="188" width="24" height="24" rx="2" fill="white" transform="rotate(45 140 200)"/><circle cx="140" cy="200" r="5" fill="#a855f7"/>`; }
+                else { innerBorder="border-emerald-400"; text="RESOURCE / DIALOGUE"; svgContent=`<circle cx="140" cy="200" r="70" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4 8" opacity="0.3"/><path d="M140 155 L180 177.5 V210 L165 210 L140 245 L115 210 L100 210 V177.5 Z" fill="#10b981"/><circle cx="134" cy="190" r="8" fill="white"/><circle cx="146" cy="198" r="8" fill="white" opacity="0.8"/>`; }
+                bgDeco=`<div class="absolute inset-0 grid-bg-back"></div>`;
+                const lc = {data:'bg-sky-400', tech:'bg-purple-400', dial:'bg-emerald-400'};
+                coloredLines=`<div class="absolute top-0 left-0 right-0 h-1 ${lc[sub]}"></div><div class="absolute bottom-0 left-0 right-0 h-1 ${lc[sub]}"></div>`;
+            } 
+            else if(card.type === 'evt' || card.type === 'blank_evt') {
+                bg="bg-red-600"; border="border-red-600"; innerBorder="border-white"; text="EVENT / ALERT";
+                svgContent=`<path d="M140 150 L185 175 V225 L140 250 L95 225 V175 Z" fill="white"/><rect x="136" y="185" width="8" height="20" rx="4" fill="#dc2626"/><circle cx="140" cy="215" r="4.5" fill="#dc2626"/>`;
+                bgDeco=`<div class="absolute inset-0 pat-event opacity-10"></div>`;
+            } 
+            else if(card.type === 'sum') {
+                bg="bg-slate-700"; border="border-slate-700"; innerBorder="border-slate-400"; text="TOWN / SUMMARY";
+                svgContent=`<path d="M140 200 L40 100 M140 200 L240 100 M140 200 L40 300 M140 200 L240 300" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4 4"/><path d="M140 160 L174.6 180 V220 L140 240 L105.4 220 V180 Z" fill="white" stroke="#475569" stroke-width="3"/><path d="M120 220 V210 L128 202 L135 210 V220 H120Z M135 220 V200 L142 193 L150 200 V220 H135Z M150 220 V212 L155 207 L160 212 V220 H150Z" fill="#475569"/>`;
+                bgDeco=`<div class="absolute inset-0 grid-bg-back opacity-20"></div>`;
+            } 
+
+            return `
+            <div class="w-full h-full p-[10px] ${bg} flex flex-col box-border border-[6px] ${border} rounded-[20px]">
+                <div class="w-full h-full border-2 ${innerBorder} rounded-[10px] flex flex-col items-center justify-center relative overflow-hidden bg-slate-800/10">
+                    ${bgDeco}${coloredLines}
+                    <div class="absolute inset-0 flex items-center justify-center ${colorClass} z-0">
+                        <svg width="280" height="400" viewBox="0 0 280 400" fill="none">
+                            ${svgContent}
+                        </svg>
+                    </div>
+                    <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                        ${htmlContent}
+                    </div>
+                    <div class="absolute bottom-6 w-full text-center z-20">
+                        <span class="text-white font-black tracking-[0.3em] text-[10px] opacity-90 drop-shadow-md">${text}</span>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        // ----------------------------------------------------
+        // 4. ページ構築処理
+        // ----------------------------------------------------
+        const printArea = document.getElementById('print-area');
+        
+        for (let i = 0; i < deck.length; i += 9) {
+            const chunk = deck.slice(i, i + 9);
+            
+            // 表面ページ
+            let frontHtml = `<div class="page-break"><div class="print-grid">`;
+            chunk.forEach(card => { 
+                frontHtml += `<div class="card-container"><div class="card-wrapper">${renderFront(card)}</div></div>`; 
+            });
+            for (let j = chunk.length; j < 9; j++) frontHtml += `<div class="card-container"><div class="card-wrapper opacity-0"></div></div>`;
+            frontHtml += `</div></div>`;
+            printArea.insertAdjacentHTML('beforeend', frontHtml);
+
+            // 裏面ページ (ミラーリング)
+            let backHtml = `<div class="page-break"><div class="print-grid">`;
+            for (let row = 0; row < 9; row += 3) {
+                let rowCards = chunk.slice(row, row + 3);
+                while (rowCards.length < 3 && row < chunk.length) rowCards.push({ type: 'empty' });
+                rowCards.reverse().forEach(card => {
+                    if (card.type === 'empty') {
+                        backHtml += `<div class="card-container"><div class="card-wrapper opacity-0"></div></div>`;
+                    } else {
+                        backHtml += `<div class="card-container"><div class="card-wrapper">${renderBack(card)}</div></div>`;
+                    }
+                });
+            }
+            backHtml += `</div></div>`;
+            printArea.insertAdjacentHTML('beforeend', backHtml);
+        }
+    </script>
+</body>
+</html>

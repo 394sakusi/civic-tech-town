@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シビックテック・タウン プレイガイド</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&display=swap');
+        body {
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        @media print {
+            body { background-color: white; }
+            .no-print { display: none !important; }
+            .page-break { page-break-before: always; }
+            .manual-container { box-shadow: none; padding: 0; max-width: 100%; }
+        }
+        h1, h2, h3 { color: #0f172a; }
+        h2 { border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; margin-top: 2rem; margin-bottom: 1rem; }
+        h3 { margin-top: 1.5rem; margin-bottom: 0.5rem; border-left: 4px solid #3b82f6; padding-left: 0.5rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; margin-bottom: 2rem; font-size: 0.9rem; }
+        th, td { border: 1px solid #cbd5e1; padding: 0.75rem; text-align: left; }
+        th { background-color: #f1f5f9; font-weight: 700; }
+        ul, ol { margin-bottom: 1rem; padding-left: 1.5rem; }
+        li { margin-bottom: 0.25rem; }
+        .highlight { font-weight: bold; color: #b91c1c; }
+    </style>
+</head>
+<body class="py-8 px-4">
+
+    <div class="no-print max-w-4xl mx-auto mb-6 flex justify-end">
+        <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow transition-colors">
+            🖨️ マニュアルを印刷する
+        </button>
+    </div>
+
+    <main class="manual-container max-w-4xl mx-auto bg-white p-8 md:p-12 rounded-xl shadow-md">
+        <header class="text-center mb-10 border-b-4 border-blue-600 pb-6">
+            <h1 class="text-3xl md:text-4xl font-black mb-2">『シビックテック・タウン (Civic Tech Town)』 プレイガイド</h1>
+            <p class="text-slate-500">シビックテック・カードゲーム プレイガイド</p>
+        </header>
+
+        <section>
+            <p class="mb-4">本マニュアルは、シビックテック (市民による技術活用)をテーマにしたカードゲーム 『シビックテック・タウン』の全ルール、コンポーネント詳細、およびゲームマスター (GM) 向けの裁定基準を網羅したプレイガイドです。</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold">1. ゲーム概要</h2>
+            
+            <h3 class="text-xl font-bold">1.1 コンセプト</h3>
+            <p class="mb-4">『シビックテック・タウン』は、地域課題(プロジェクト)を「データ」「技術」「対話」のリソースを駆使して解決し、ハピネスポイント (HP) を稼ぐゲームです。しかし、プレイヤーが自分の利益(HP)だけを追求して成果を「独占」すると、社会の「不満」が蓄積します。不満が最大(10) に達すると社会が崩壊し、<strong>プレイヤー全員が敗北(共倒れ)</strong>となります。成果を社会に「オープン化 (共有)」 することで不満を下げ、次なる課題解決の「基盤」を構築しながら、トップを目指す「半協力・半対戦」のゲームです。</p>
+
+            <h3 class="text-xl font-bold">1.2 プレイ情報</h3>
+            <ul class="list-disc">
+                <li>プレイ人数: 4名</li>
+                <li>プレイ時間: 30~45分</li>
+                <li>対象年齢: 12歳以上</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold">2. ゲームの終了条件と2つの社会モード</h2>
+            <p class="mb-4">ゲームは全5ラウンドで構成されます。本作には、異なる「社会のあり方」を体験できる2つのゲームモードが用意されています。</p>
+
+            <h3 class="text-xl font-bold">2.1 終了条件(両モード共通)</h3>
+            <p class="mb-2">以下のいずれかの条件を満たした瞬間にゲームが終了します。</p>
+            <ol class="list-decimal">
+                <li><strong>社会崩壊(全員敗北):</strong> 「不満トラック」が10に到達した瞬間、即座にゲーム終了となり、プレイヤー全員の敗北となります。</li>
+                <li><strong>完走 (ゲームクリア):</strong> 不満度10に達することなく、第5ラウンドの終了処理 (イベントと自然増)を乗り切った場合。</li>
+            </ol>
+
+            <h3 class="text-xl font-bold">2.2 競争社会モード (スタンダード・対戦型)</h3>
+            <ul class="list-disc">
+                <li><strong>テーマ:</strong> 成果が強く求められ、組織間の壁によって他者からの協力が容易には得られない、シビアな現代社会の縮図です。</li>
+                <li><strong>勝利条件:</strong> ゲームクリア時、最も多くの「ハピネスポイント (HP)」を獲得しているプレイヤーの単独勝利です。</li>
+                <li><strong>狙い:</strong> 自分の組織の手柄 (独占) を優先するか、街の基盤(オープン化) に貢献するかのジレンマに直面します。社会の不満(技術的負債) が限界を迎える前に、いかに他地域を出し抜き、限られたリソースの中で影響力のあるリーダーになるかを目指します。</li>
+            </ul>
+
+            <h3 class="text-xl font-bold">2.3 共生社会モード (スコアアタック・協力型)</h3>
+            <ul class="list-disc">
+                <li><strong>テーマ:</strong> オープンソースの精神が浸透し、他者からの協力や連携が当たり前に行われる理想の社会です。</li>
+                <li><strong>勝利条件:</strong> プレイヤー同士で争うのではなく、ゲームクリア時の<strong>「全員の合計HP」</strong>でプレイの質を評価します。</li>
+                <li><strong>評価ランク(目安):</strong>
+                    <ul class="list-circle mt-2 mb-2">
+                        <li>合計 60 HP未満: 駆け出しのシビックテック・チーム</li>
+                        <li>合計 60~80HP: 地域に根ざした優秀なエコシステム</li>
+                        <li>合計 81HP以上: 世界に誇るオープンソース都市 (マスタークラス)</li>
+                    </ul>
+                </li>
+                <li><strong>狙い:</strong> 誰かが抜け駆けするのではなく、共有基盤を最大効率で使い回し、互いに手札を提供(支援) し合うことで、いかに社会全体の富 (ハピネス) を最大化するかを追求する高度な遊び方です。</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold">3. コンポーネント (内容物) 概要</h2>
+            <p class="mb-2 text-sm text-slate-500">※各カードの詳細な内訳や効果については、Appendix B を参照してください。</p>
+            <ul class="list-disc">
+                <li><strong>地域カード (4枚):</strong> プレイヤーの役割 (能力・弱点)を示します。</li>
+                <li><strong>リソースカード (60枚):</strong> 手札。データ (20) / 技術(20) / 対話(20)。</li>
+                <li><strong>プロジェクトカード (30種):</strong> 場に出る課題。裏面は「共有リソース」として機能します。</li>
+                <li><strong>広域課題(イベント) カード (10種):</strong> ラウンド終了時に発生するトラブル。</li>
+                <li><strong>ハピネス(HP) カード (120枚):</strong> 1HP, 2HP, 3HP, 4HPの得点カード。(※ハーフサイズ仕様・1スロット2枚組により増量済)</li>
+                <li><strong>不満トラックボード&マーカー (1セット):</strong> 不満度(0~10)を記録。</li>
+                <li><strong>サマリーカード (4枚):</strong> プレイヤー用の手番早見表。</li>
+            </ul>
+        </section>
+
+        <section class="page-break">
+            <h2 class="text-2xl font-bold">4. ゲームの準備 (セットアップ)</h2>
+            <ol class="list-decimal mb-4">
+                <li>不満トラックを中央に置き、マーカーを「0」にセットします。</li>
+                <li>リソースカードを種類別 (データ・技術・対話) の3つの山札にし、シャッフルして配置します。</li>
+                <li>イベントカードをシャッフルし、裏向きの山札にします。</li>
+                <li>プロジェクトカードをシャッフルし、山札にします。そこから各プレイヤーに3枚ずつ配り、各自の前に表向きで並べます。</li>
+                <li>各プレイヤーは地域カードを1枚選びます (ランダムでも可)。</li>
+                <li>各プレイヤーは初期手札として、好きなリソース山札から合計5枚引きます。</li>
+                <li>プレイヤーの手元にサマリーカードを1枚ずつ配ります。</li>
+                <li>適当な方法でスタートプレイヤーを決定します。</li>
+            </ol>
+            <p class="text-sm bg-blue-50 p-2 rounded text-blue-800 border border-blue-200"><strong>【※山札切れについて】:</strong> ゲーム中にいずれかのリソースの山札が尽きた場合は、直ちに該当カテゴリーの捨て札をすべてシャッフルし、新しい山札として再利用してください。</p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold">5. ゲームフロー (ターンの流れ)</h2>
+            <p class="mb-4">ゲームは第1ラウンド~第5ラウンドまで進行します。ラウンド中は、スタートプレイヤーから時計回りに手番を行います。全員が1回ずつ手番を行うとラウンド終了処理に入ります。</p>
+
+            <h3 class="text-xl font-bold">5.1 プレイヤー手番 (2アクション選択)</h3>
+            <p class="mb-4">自分の番では、以下の4つのアクションから合計2アクションを実行します(同じアクションを2回選んでも構いません)。</p>
+            
+            <div class="mb-4">
+                <h4 class="font-bold text-lg text-blue-700">① 調査(ドロー)</h4>
+                <p>好きなリソース山札 (データ・技術・対話)の組み合わせで、カードを合計2枚引きます。(文教エリアは、データを選ぶとボーナスでもう1枚引けます)。</p>
+            </div>
+            
+            <div class="mb-4">
+                <h4 class="font-bold text-lg text-blue-700">② 支援(サポート)</h4>
+                <p>他人の前にあるプロジェクトの解決に必要なリソースカードを、自分の手札から1枚プレゼントします(相手のプロジェクトの上に置きます)。</p>
+                <ul class="list-disc mt-1">
+                    <li><strong>報酬:</strong> 支援したプレイヤーは、感謝の印として即座に+2HPを獲得します。</li>
+                </ul>
+            </div>
+
+            <div class="mb-4">
+                <h4 class="font-bold text-lg text-blue-700">③ 解決(プロジェクトのクリア)</h4>
+                <p>自分の前にあるプロジェクトカードに指定されたコスト (リソースカード)を支払い、課題を解決します。支払った手札は各捨て札に置きます。解決後、直ちに以下の「A」か「B」の選択を行います。</p>
+                
+                <div class="ml-4 mt-2 p-4 bg-slate-50 border border-slate-200 rounded">
+                    <p class="font-bold mb-2">A. 独占する(クローズド)</p>
+                    <ul class="list-disc mb-4">
+                        <li>記載されているHPを満額獲得します。</li>
+                        <li>成果を社会と共有しないため、不満トラックが+1されます。</li>
+                        <li class="highlight">【注意】: 第4ラウンド・第5ラウンドは社会の縮小(担い手不足)により、独占のペナルティが+2に加速します。</li>
+                        <li>解決したプロジェクトカードは手元に裏向きでキープします。</li>
+                    </ul>
+                    
+                    <p class="font-bold mb-2">B. 公開する (オープン化)</p>
+                    <ul class="list-disc mb-2">
+                        <li>獲得HPのうち「1HP」をリソース公開のコストとして支払い、残りのHPを獲得します (例: 3HPなら手元には2HPを獲得)。</li>
+                        <li>成果を社会還元したため、不満トラックが-1されます。</li>
+                        <li>解決したプロジェクトカードを裏返し、場の中央 (リポジトリ) に<strong>「共有リソース」</strong>として置きます。</li>
+                        <li class="highlight">【有用期限のセット】: 共通のストックから1HPカードを3枚取り、公開した共有リソースの上に「1列」に重ねて置きます。これがこのリソースが有用な期限(継続的な感謝・称賛を得られる回数)となります。</li>
+                    </ul>
+                </div>
+                <p class="text-sm text-slate-500 mt-2">※解決アクション終了後、山札から新しいプロジェクトカードを1枚引き、自分の前に補充します(常に前に3枚ある状態にします)。</p>
+            </div>
+
+            <div class="mb-4">
+                <h4 class="font-bold text-lg text-blue-700">④ 参画: コミッターによるメンテナンス (※中心エリア専用アクション)</h4>
+                <ul class="list-disc">
+                    <li>場の「共有リソース」1枚を選びます。都市の開発者がコミッターとして技術的負債を解消し、リソースの有用期限を延ばします。</li>
+                    <li><strong>効果 (期限の再セット):</strong> 選んだ共有リソースの上に残っているHPカードを一度ストックに戻し、新たに共通ストックから1HPカードを4枚取り、<strong>「2枚×2列」</strong>にして置き直します。列の数(2列)により、コミッターによってメンテナンスされている状態であることを示します。</li>
+                </ul>
+            </div>
+
+            <h3 class="text-xl font-bold mt-6">5.2 共有リソースの利用ルール</h3>
+            <p class="mb-2">場に裏向きで置かれた「共有リソース」は、プロジェクト解決時の代用コストとして利用できます。</p>
+            <ul class="list-disc mb-4">
+                <li><strong>効果:</strong> 対応するカテゴリー (データ・技術・対話)のカード 「1枚分」として機能します。</li>
+                <li><strong>利用制限:</strong> 共有リソースは手札や追加コストを消費せずに利用できますが、基本的には<strong>1つのプロジェクト解決につき1共有リソースまで</strong>しか利用できません（※後述の「高難度プロジェクト」における特例を除く）。</li>
+                <li><strong>継続的な感謝 (HP報酬):</strong> 共有リソースが利用されると、リソースの上にセットされているHPカードからHPが支払われます。
+                    <ul class="list-circle mt-1 mb-1 ml-4 text-sm">
+                        <li><strong>1列 (通常公開時) の場合:</strong> 1列から1HPカードを1枚取り、<strong>「公開者」</strong>が獲得します。</li>
+                        <li><strong>2列 (コミッター参画時) の場合:</strong> 2つの列からそれぞれ1HPカードを1枚ずつ(計2枚)取り、<strong>「公開者」</strong>と<strong>「コミッター参画者」</strong>がそれぞれ1HPずつ獲得します。</li>
+                    </ul>
+                </li>
+                <li><strong>有用期限切れ:</strong> 利用されて上にセットされたHPカードがなくなった共有リソースは「有用な期限」が切れ、<strong>捨て札となります</strong>。</li>
+            </ul>
+
+            <h3 class="text-xl font-bold">5.3 高難度プロジェクトの解決</h3>
+            <p class="mb-2">プロジェクト No.10, 20, 30 (⚠️アイコン)は必要リソースが5〜6枚と非常に多く設定された高難度プロジェクトです。手札のみで解決することも可能ですが、現実的には場の共有リソースを最大限に活用する必要があります。</p>
+            <p class="text-sm bg-blue-50 p-2 rounded text-blue-800 border border-blue-200 mb-4"><strong>【特例ルール: 共有リソースの複数利用】:</strong> 高難度プロジェクトの解決時に限り、通常の制限（1プロジェクトにつき共有リソース1枚まで）を超えて、<strong>例外的に「自身が公開中の共有リソース1枚」と「他者が公開中の共有リソース1枚」を合わせて最大2枚まで同時に代用コストとして利用することが認められます</strong>。</p>
+
+            <h3 class="text-xl font-bold">5.4 ラウンド終了処理</h3>
+            <p class="mb-2">全員の手番が終わったら、以下の処理を順に行います。</p>
+            
+            <h4 class="font-bold text-lg mt-2">① イベント(広域課題)の発生</h4>
+            <p class="mb-2">イベントカードを1枚めくります。プレイヤーは相談し、手札から指定されたカテゴリーのカードを出し合って解決を目指します。(場の共有リソースを消費扱いにして代用することも可能です)。</p>
+            <ul class="list-disc mb-4">
+                <li><strong>失敗:</strong> 解決条件（指定枚数）を満たせない場合、記載されたペナルティ (不満+1など) を受けます。</li>
+                <li><strong>成功:</strong> 解決条件を満たせばペナルティを回避できます。一部のイベントでは、指定されたカードを<strong>誰か1人が</strong>1枚出すだけで条件を満たせる「代替条件（OR条件）」が存在します。</li>
+                <li><strong>ボーナス:</strong> 解決条件を満たした上で、テキストに指定された「特定のカード (例: ファクトチェック用統計)」が含まれていれば、さらに不満度が下がる等の追加ボーナスを得られます。</li>
+                <li>使用した手札は捨て札になります。</li>
+            </ul>
+
+            <h4 class="font-bold text-lg mt-2">② 不満トラックの自然増 (地域社会の縮小)</h4>
+            <p class="mb-2">ラウンド経過により、少子高齢化やコミュニティの縮小が進み、社会を維持するための不満トラックが無条件で上昇します。</p>
+            <ul class="list-disc mb-2">
+                <li>第1~第3ラウンド終了時: 不満+1</li>
+                <li>第4~第5ラウンド終了時: 不満+2 (少子高齢化による担い手不足で加速)</li>
+            </ul>
+            <p class="text-sm text-slate-500">※この処理で不満が10に達した場合も、直ちにゲームオーバーです。無事乗り切れば、次のラウンドへ進みます (スタートプレイヤーは左隣に移ります)。</p>
+        </section>
+
+        <section class="page-break">
+            <h2 class="text-2xl font-bold">Appendix A: コンセプトとメカニクスの狙い (GM向け)</h2>
+            <div class="space-y-4">
+                <p><strong>【独占と共有のジレンマ】</strong> 自分のプロジェクトを「独占」すれば高得点を得られますが、社会の不満(技術的負債や未解決の課題)が蓄積し、いずれゲームオーバーを招きます。「公開(オープン化)」すれば自分の得点は減りますが、社会の不満が下がり、他人がそれを利用して新たな開発を行うことができます。</p>
+                <p><strong>【継続的な感謝とメンテナンス】</strong> 共有リソースは利用されるたびに、その有用な期限が切れるまで公開者にHP（継続的な感謝）が入り続けます。しかし情報やシステムは時間と共に陳腐化します（セットされたHPカードが尽きる）。この陳腐化を防ぎ、システムを保守するのが、エコシステム全体を支える<strong>「中心エリア」独自の役割（コミッター参画）</strong>です。彼らがメンテナンスを行うことで、再び有用なリソースとして蘇り、公開者とコミッターの両方に利益をもたらす持続可能なエコシステムを表現しています。</p>
+                <p class="bg-yellow-50 p-4 rounded border border-yellow-200">GMは、プレイヤーが「なぜ特定のデータが共有基盤になるのか?」と疑問に思った際、「AEDマップのシステムを汎用的なAPIとして作り直したから、他の地図アプリでも使い回せるようになったんですよ」といった具合に、現実のシステム開発に例えて解説してあげてください。</p>
+            </div>
+        </section>
+
+        <section class="page-break">
+            <h2 class="text-2xl font-bold">Appendix B: 全コンポーネント詳細リスト</h2>
+            <p class="mb-4">GMがプレイ中にカード効果や枚数を確認するための詳細リストです。</p>
+
+            <h3 class="text-xl font-bold">B.1 コンポーネント総括表</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>種類</th>
+                        <th>内訳・枚数</th>
+                        <th>概要・役割</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>地域カード</td>
+                        <td>全4枚</td>
+                        <td>プレイヤーの役割。常時発動する「能力」と「弱点」を持つ。</td>
+                    </tr>
+                    <tr>
+                        <td>リソースカード</td>
+                        <td>全60枚</td>
+                        <td>解決のための手札。データ(20枚)、技術(20枚)、対話(20枚)</td>
+                    </tr>
+                    <tr>
+                        <td>プロジェクトカード</td>
+                        <td>全30種(各1枚)</td>
+                        <td>解決すべき地域の課題。裏面は「共有リソース」となる。</td>
+                    </tr>
+                    <tr>
+                        <td>イベントカード</td>
+                        <td>全10種(各1枚)</td>
+                        <td>ラウンド終了時に発生する社会のトラブル。</td>
+                    </tr>
+                    <tr>
+                        <td>ハピネスカード</td>
+                        <td>全120枚</td>
+                        <td>得点(HP)チップ。1HP (40枚), 2HP (20枚), 3HP (40枚), 4HP(20枚)。(※ハーフサイズ化)</td>
+                    </tr>
+                    <tr>
+                        <td>その他</td>
+                        <td>ボード・サマリ</td>
+                        <td>不満トラック (1枚)、マーカー(1個)、サマリーカード(4枚)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="text-xl font-bold">B.2 地域カード(全4枚)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>エリア名</th>
+                        <th>専門</th>
+                        <th>能力詳細</th>
+                        <th>弱点</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>スタートアップ</td>
+                        <td>技術</td>
+                        <td>PJ解決に必要な「技術」 コストを1枚少なくできる。</td>
+                        <td>なし</td>
+                    </tr>
+                    <tr>
+                        <td>文教エリア</td>
+                        <td>データ</td>
+                        <td>アクションで「データ」を引く際、追加でもう1枚引ける。</td>
+                        <td>なし</td>
+                    </tr>
+                    <tr>
+                        <td>下町エリア</td>
+                        <td>対話</td>
+                        <td>「対話」を含むPJ解決時、追加で+1HP (1Rに1回まで)。</td>
+                        <td>技術かデータが「2枚以上」必要なPJを単独解決するとHP-1。</td>
+                    </tr>
+                    <tr>
+                        <td>中心エリア</td>
+                        <td>基盤</td>
+                        <td>専用アクション<strong>「コミッター参画」</strong>が使用可能。</td>
+                        <td>対話が「2枚以上」必要なPJを単独解決するとHP-1。</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p class="text-sm text-slate-500">(※GM裁定: 弱点における「単独解決」とは、他者の支援や共有リソースを使わず、自らの手札のみで解決した場合を指します)</p>
+
+            <h3 class="text-xl font-bold mt-8">B.3 リソースカード内訳 (全60枚)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>種別</th>
+                        <th>枚数</th>
+                        <th>カード名 (同名複数枚あり)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td rowspan="3" class="bg-sky-50 text-sky-800 font-bold">データ<br>(計20枚)</td>
+                        <td>各2枚</td>
+                        <td>AED位置情報、避難所名簿(CSV)、街の古写真</td>
+                    </tr>
+                    <tr>
+                        <td>各1枚</td>
+                        <td>街路樹・日影データ、バリアフリーデータ、浸水履歴データ、ゴミ分別DB、給食献立データ、トイレ位置データ、Wi-Fi位置データ、ベンチ調査ログ、直売所リスト、施設URLリスト、パトロール日誌データ、公園遊具データ、図書館蔵書API、ファクトチェック用統計</td>
+                    </tr>
+                    <tr>
+                        <td class="bg-sky-50 text-sky-800 font-bold"></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td rowspan="3" class="bg-purple-50 text-purple-800 font-bold">技術<br>(計20枚)</td>
+                        <td>4枚</td>
+                        <td>地図API</td>
+                    </tr>
+                    <tr>
+                        <td>3枚</td>
+                        <td>スマホアプリ基盤</td>
+                    </tr>
+                    <tr>
+                        <td>各2枚</td>
+                        <td>Webフォーム、Webサイト基盤、写真投稿システム</td>
+                    </tr>
+                    <tr>
+                        <td class="bg-purple-50 text-purple-800 font-bold"></td>
+                        <td>各1枚</td>
+                        <td>検索エンジン、多言語翻訳ツール、印刷用PDF基盤、デジタル化ツール、デバッグツール、セキュリティパッチ、新Ver対応キット</td>
+                    </tr>
+                    <tr>
+                        <td rowspan="3" class="bg-emerald-50 text-emerald-800 font-bold">対話<br>(計20枚)</td>
+                        <td>4枚</td>
+                        <td>住民聞き取り</td>
+                    </tr>
+                    <tr>
+                        <td>各3枚</td>
+                        <td>ワークショップ、キーマンとの調整</td>
+                    </tr>
+                    <tr>
+                        <td>2枚</td>
+                        <td>やさしい日本語</td>
+                    </tr>
+                    <tr>
+                        <td class="bg-emerald-50 text-emerald-800 font-bold"></td>
+                        <td>各1枚</td>
+                        <td>伝統行事の裏方、自治体ヒアリング、対話テンプレート、地域ルール調査、店主インタビュー、ボランティア募集案、ピザとビール、感謝のメッセージ</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="text-xl font-bold mt-8">B.4 プロジェクトカード (全30種)</h3>
+            <p class="text-sm mb-2 text-slate-500">※「オープン化」を選択すると、裏返って右列の「共有リソース」となり、該当リソース1枚分として代用可能になります。</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>カテゴリー(裏面効果)</th>
+                        <th>タイトル</th>
+                        <th>必要なリソース (表面)</th>
+                        <th>HP</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td rowspan="10" class="bg-sky-50 text-sky-800 font-bold text-xs">あんしん・街づくり<br>→(裏) データ1枚分</td>
+                        <td>AEDマップ</td>
+                        <td>[AED位置情報] + [地図API]</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>日陰ルート案内</td>
+                        <td>[日影データ] + [地図API]</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>持ち物チェッカー</td>
+                        <td>[避難所名簿] + [Webフォーム]</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>バリアフリーマップ</td>
+                        <td>[バリアフリー] + [地図API]</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>不具合レポート</td>
+                        <td>[写真投稿] + [デバッグツール] + [聞き取り]</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>水害アーカイブ</td>
+                        <td>[浸水履歴] + [古写真] + [聞き取り]</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>雪かき共有</td>
+                        <td>[WS] + [調整] + [地図API]</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>炊き出し案内</td>
+                        <td>[避難所名簿] + [聞き取り]</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>ペット避難ガイド</td>
+                        <td>[避難所名簿] + [ヒアリング] + [対話テンプレート]</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td class="font-bold text-blue-700">多言語誘導シート (高難度)</td>
+                        <td class="bg-blue-50">[避難所名簿] + [やさしい日本語] + [翻訳ツール] + [PDF基盤] + [ヒアリング]</td>
+                        <td class="font-bold text-blue-700">7</td>
+                    </tr>
+                    <!-- くらし・利便性 -->
+                    <tr>
+                        <td>11</td>
+                        <td rowspan="10" class="bg-purple-50 text-purple-800 font-bold text-xs">くらし・利便性<br>→(裏)技術1枚分</td>
+                        <td>新ルール対応ゴミ分別検索</td>
+                        <td>[ゴミ分別DB] + [新Ver対応キット] + [Webサイト]</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>アレルギーチェック</td>
+                        <td>[献立データ] + [アプリ基盤]</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>13</td>
+                        <td>公園トイレマップ</td>
+                        <td>[トイレデータ] + [写真投稿] + [聞き取り]</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>14</td>
+                        <td>公衆Wi-Fiマップ</td>
+                        <td>[Wi-Fiデータ] + [地図API]</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>15</td>
+                        <td>ベンチマップ</td>
+                        <td>[ベンチログ] + [聞き取り]</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>16</td>
+                        <td>直売所ナビ</td>
+                        <td>[直売所リスト] + [Webサイト]</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>17</td>
+                        <td>安全な公共施設リンク集</td>
+                        <td>[URLリスト] + [セキュリティパッチ] + [Webサイト]</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>18</td>
+                        <td>放置自転車パトロール</td>
+                        <td>[パトロールログ] + [聞き取り]</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>19</td>
+                        <td>遊具・砂場ガイド</td>
+                        <td>[遊具データ] + [アプリ基盤] + [WS]</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>20</td>
+                        <td class="font-bold text-blue-700">図書一括検索 (高難度)</td>
+                        <td class="bg-blue-50">[蔵書API] + [検索エンジン] + [アプリ基盤] + [Webサイト] + [調整] + [聞き取り]</td>
+                        <td class="font-bold text-blue-700">9</td>
+                    </tr>
+                    <!-- つながり・共創 -->
+                    <tr>
+                        <td>21</td>
+                        <td rowspan="10" class="bg-emerald-50 text-emerald-800 font-bold text-xs">つながり・共創<br>→(裏)対話1枚分</td>
+                        <td>公園投稿サイト</td>
+                        <td>[地図API]+[Webフォーム] + [感謝のメッセージ]</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>22</td>
+                        <td>地域イベントサイト</td>
+                        <td>[URLリスト] + [Webサイト] + [調整]</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>23</td>
+                        <td>やさしいゴミ案内</td>
+                        <td>[やさしい日本語]+[翻訳ツール] + [聞き取り]</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>24</td>
+                        <td>街のうわさ検証サイト</td>
+                        <td>[ファクトチェック用統計] + [写真投稿]</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>25</td>
+                        <td>10代の本音ポスト</td>
+                        <td>[ピザとビール] + [Webフォーム] + [アプリ基盤]</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>26</td>
+                        <td>お祭り手伝い募集</td>
+                        <td>[ボランティア募集] + [伝統行事の裏方]</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>27</td>
+                        <td>商店街図鑑</td>
+                        <td>[店主インタ] + [WS] + [写真投稿]</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>28</td>
+                        <td>街のトリセツ</td>
+                        <td>[地域ルール] + [聞き取り]</td>
+                        <td>3</td>
+                    </tr>
+                    <tr>
+                        <td>29</td>
+                        <td>昔のデジタル写真館</td>
+                        <td>[古写真] + [デジタル化]+[聞き取り]</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>30</td>
+                        <td class="font-bold text-blue-700">お気に入り自慢マップ (高難度)</td>
+                        <td class="bg-blue-50">[古写真] + [聞き取り] + [WS] + [地図API] + [アプリ基盤]</td>
+                        <td class="font-bold text-blue-700">7</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="mt-4 p-4 bg-slate-50 border border-slate-200 rounded text-sm text-slate-600">
+                <p class="font-bold text-slate-800 mb-1">※ カード上の省略表記について</p>
+                <p>カード面では視認性向上のため、プロジェクト名および必要なリソース名に省略表記を用いています。マニュアルとカードデザインを照合する際の主な省略・対応は以下の通りです。</p>
+                <ul class="list-disc mt-2 ml-4 columns-2 sm:columns-3 gap-4 text-xs font-medium">
+                    <li>WS → ワークショップ</li>
+                    <li>聞き取り → 住民聞き取り</li>
+                    <li>調整 → キーマンとの調整</li>
+                    <li>ヒアリング → 自治体ヒアリング</li>
+                    <li>アプリ基盤 → スマホアプリ基盤</li>
+                    <li>Webサイト → Webサイト基盤</li>
+                    <li>翻訳ツール → 多言語翻訳ツール</li>
+                    <li>古写真 → 街の古写真</li>
+                    <li>避難所名簿 → 避難所名簿(CSV)</li>
+                    <li>日影データ → 街路樹・日影データ</li>
+                    <li>写真投稿 → 写真投稿システム</li>
+                    <li>デジタル化 → デジタル化ツール</li>
+                </ul>
+                <p class="mt-3 text-xs">（その他、長文のリソース名についても枠内に収まるよう一部単語を省略しています）</p>
+            </div>
+
+            <h3 class="text-xl font-bold mt-8 page-break">B.5 広域課題(イベント) カード (全10種)</h3>
+            <div class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded text-sm text-slate-700">
+                <p class="font-bold text-yellow-800 mb-1">※ イベント条件における「共有リソースの枚数」判定について</p>
+                <p>イベント（No.6, 10など）の解決条件で「共有リソースが〇枚以上あるか」を判定する際、対象となるのは<strong>「現在場に出ている（有用期限内の）共有リソースのみ」</strong>です。有用期限が切れて捨て札となったリソースはカウントしません。<br>過去の遺産に頼るのではなく、社会基盤を常に新しく公開し、メンテナンスし続けることがイベント（社会課題）の解決において重要となります。</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>No</th>
+                        <th>タイトル</th>
+                        <th>解決条件 (OR条件含む)</th>
+                        <th>失敗時</th>
+                        <th>ボーナス効果 (特定カード等)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>オープンデータ推進の風</td>
+                        <td>解決不要 (ポジティブイベント)</td>
+                        <td>-</td>
+                        <td>全員がデータ山札から1枚引く。不満-1</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>メンテナンス不足の露呈</td>
+                        <td>全員で技術を計2枚投入<br><span class="font-bold text-blue-600">または 誰か1人が[デバッグツール] 1枚投入</span></td>
+                        <td class="text-red-600 font-bold">不満+1</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>メディアでの大特集</td>
+                        <td>解決不要 (ポジティブイベント)</td>
+                        <td>-</td>
+                        <td>自身が公開中の共有リソースが最も多い<br>プレイヤー（同数なら全員）に3HP。不満-1</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>SNSでの情報の混乱</td>
+                        <td>全員でデータを計2枚投入</td>
+                        <td class="text-red-600 font-bold">不満+1</td>
+                        <td>投入カードに [ファクトチェック用統計] が含まれていれば不満-1</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>共通ツールの脆弱性発見</td>
+                        <td>全員で技術を計2枚投入<br><span class="font-bold text-blue-600">または 誰か1人が[セキュリティパッチ] 1枚投入</span></td>
+                        <td class="text-red-600 font-bold">不満+1</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>他地域からの視察</td>
+                        <td>データ・技術・対話すべての共有リソースが各1枚以上あるか</td>
+                        <td class="text-red-600 font-bold">不満+1</td>
+                        <td>達成なら不満-2。さらに全員1HP獲得</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>メンバーの燃え尽き症候群</td>
+                        <td>全員が対話を1枚ずつ投入<br><span class="font-bold text-blue-600">または 誰か1人が[ピザとビール] か [感謝のメッセージ] 1枚投入</span></td>
+                        <td class="text-red-600 font-bold">不満+1</td>
+                        <td>-</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>開発ツールのアップデート</td>
+                        <td>全員が技術かデータを1枚ずつ投入</td>
+                        <td class="text-red-600 font-bold">不満+1</td>
+                        <td>投入カードに [新Ver対応キット] が含まれていれば不満-1</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>住民からの感謝の声</td>
+                        <td>解決不要 (ポジティブイベント)</td>
+                        <td>-</td>
+                        <td>全員1HP獲得。不満-1</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>データの二次利用ニュース</td>
+                        <td>共有リソースが計3枚以上あるか</td>
+                        <td>-</td>
+                        <td>達成なら不満-1。さらに自身が公開中の<br>共有リソース1枚につき1HP獲得</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+</body>
+</html>
