@@ -12,8 +12,8 @@
 
 * Read Me.md： このファイル  
 * gmmanual.html： GM向けのフルセットのマニュアル（A4印刷・Web閲覧用）  
-* playermanual.html： プレイヤー向けの簡易マニュアル  
-* carddesign.html： 全カードのデザインデータ（A4サイズ印刷用）  
+* playermanual.html： プレイヤー向けの簡易マニュアル（A4印刷・Web閲覧用）
+* carddesign.html： 全カードのデザインデータ（A4サイズ印刷用）
 * playmat\_a3x2.html： プレイマットのデザインデータ（A3サイズ2枚貼り合わせ用）
 
 ## **🖨️ 遊び方**
