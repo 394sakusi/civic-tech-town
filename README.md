@@ -10,7 +10,7 @@
 
 データ管理と印刷のしやすさを考慮し、すべてHTML/CSS(Tailwind)の単一ファイルで構成されています。
 
-* Read Me.md： このファイル  
+* README.md： このファイル  
 * gmmanual.html： GM向けのフルセットのマニュアル（A4印刷・Web閲覧用）  
 * playermanual.html： プレイヤー向けの簡易マニュアル（A4印刷・Web閲覧用）
 * carddesign.html： 全カードのデザインデータ（A4サイズ印刷用）
