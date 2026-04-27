@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>シビックテック・タウン カードデザイン</title>
+    <title>シビックテック・タウン 印刷所入稿対応データ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Color+Emoji&family=Noto+Sans+JP:wght@400;700;900&display=swap');
@@ -17,7 +17,6 @@
             print-color-adjust: exact;
         }
         
-        /* 印刷用ページ設定 (A4) */
         @page {
             size: A4 portrait;
             margin: 0;
@@ -54,7 +53,7 @@
             height: 88mm;
             position: relative;
             box-sizing: border-box;
-            border: 0.1mm dashed #cbd5e1; 
+            border: 0.1mm dashed #cbd5e1; /* 個別切り出しの目安（データ上の大外枠） */
             overflow: hidden; 
             display: flex;
             align-items: center;
@@ -69,9 +68,7 @@
             transform-origin: center center;
             position: absolute;
             box-sizing: border-box;
-            border-radius: 20px; 
-            overflow: hidden;
-            background-color: white;
+            background-color: transparent;
             flex-shrink: 0;
         }
 
@@ -89,9 +86,12 @@
 <body>
 
     <nav class="no-print max-w-4xl mx-auto mt-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-        <h1 class="text-2xl font-black text-slate-800 mb-2">🖨️ カードデザイン</h1>
+        <h1 class="text-2xl font-black text-slate-800 mb-2">🖨️ 印刷所入稿対応デザインマスター</h1>
+        <p class="text-sm text-slate-700 font-bold mb-1">【裁断ズレ防止・塗り足し対応版】</p>
         <p class="text-sm text-slate-600 mb-4">
-            A4用紙、倍率<strong>100%</strong>、<strong>背景のグラフィック：ON</strong>、<strong>両面印刷（長辺綴じ）</strong>で出力し、HPカードは印刷後に中央のガイドラインに沿って切り離してください。
+            印刷所向けの「塗り足し（ドブ）」に対応したレイアウトです。カードの図柄を縮小し、周囲に3mmの塗り足し領域を確保しました。<br>
+            仕上がりサイズは <strong>57mm × 82mm</strong> となります。内側に表示されている十字のトンボ（ガイド線）を目安に裁断するようご指示ください。<br>
+            A4用紙、倍率<strong>100%</strong>、<strong>背景のグラフィック：ON</strong>、<strong>両面印刷（長辺綴じ）</strong>でPDF出力して入稿してください。
         </p>
         <button onclick="window.print()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl transition-all flex items-center justify-center gap-2">
             <span>印刷画面を開く (PDFとして保存)</span>
@@ -101,6 +101,27 @@
     <div id="print-area"></div>
 
     <script>
+        // --- 塗り足し・裁断ガイド追加ラッパー ---
+        // 外側から14px(約3.1mm)内側の位置にガイドを描画し、図柄全体を88%に縮小して安全マージンを確保する
+        function withBleed(content, bgColor) {
+            return `
+            <div class="w-full h-full ${bgColor} relative flex items-center justify-center overflow-hidden">
+                <div class="absolute top-[14px] left-[14px] w-3 h-3 border-t-2 border-l-2 border-white/80 mix-blend-overlay z-50 pointer-events-none"></div>
+                <div class="absolute top-[14px] right-[14px] w-3 h-3 border-t-2 border-r-2 border-white/80 mix-blend-overlay z-50 pointer-events-none"></div>
+                <div class="absolute bottom-[14px] left-[14px] w-3 h-3 border-b-2 border-l-2 border-white/80 mix-blend-overlay z-50 pointer-events-none"></div>
+                <div class="absolute bottom-[14px] right-[14px] w-3 h-3 border-b-2 border-r-2 border-white/80 mix-blend-overlay z-50 pointer-events-none"></div>
+                
+                <div class="absolute top-[15px] left-[15px] w-2 h-2 border-t border-l border-black/30 z-50 pointer-events-none"></div>
+                <div class="absolute top-[15px] right-[15px] w-2 h-2 border-t border-r border-black/30 z-50 pointer-events-none"></div>
+                <div class="absolute bottom-[15px] left-[15px] w-2 h-2 border-b border-l border-black/30 z-50 pointer-events-none"></div>
+                <div class="absolute bottom-[15px] right-[15px] w-2 h-2 border-b border-r border-black/30 z-50 pointer-events-none"></div>
+
+                <div class="w-full h-full scale-[0.88] origin-center relative">
+                    ${content}
+                </div>
+            </div>`;
+        }
+
         const getBorderText = (textColor = 'text-white/80', copyColor = 'text-white/50') => `
             <div class="absolute left-0 top-[60px] bottom-[60px] w-[20px] flex items-center justify-center pointer-events-none">
                 <span class="${textColor} text-[10px] font-black tracking-[0.3em] -rotate-90 whitespace-nowrap">CIVIC TECH TOWN</span>
@@ -119,18 +140,13 @@
             dial: 'M0 0h44v24a10 10 0 01-10 10h-6l-5 10-4-10H0V0z'
         };
 
-        // パターン生成関数
         const getPatternDef = (patName, patColor, patId) => {
-            if (patName === 'dot') {
-                return `<pattern id="${patId}" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.5" fill="${patColor}" opacity="0.4"/></pattern>`;
-            } else if (patName === 'circuit') {
-                return `<pattern id="${patId}" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M0 15h10l5-5h10 M15 30v-10l5-5h10 M0 5h5l5 5h10 M25 5v5l-5 5v10" fill="none" stroke="${patColor}" stroke-width="1.5" opacity="0.4"/><circle cx="25" cy="10" r="2" fill="${patColor}" opacity="0.6"/><circle cx="10" cy="15" r="2" fill="${patColor}" opacity="0.6"/><circle cx="20" cy="20" r="2" fill="${patColor}" opacity="0.6"/></pattern>`;
-            } else {
-                return `<pattern id="${patId}" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="8" fill="none" stroke="${patColor}" stroke-width="1.5" opacity="0.4"/><circle cx="20" cy="20" r="16" fill="none" stroke="${patColor}" stroke-width="1.5" opacity="0.4"/><circle cx="20" cy="20" r="24" fill="none" stroke="${patColor}" stroke-width="1.5" opacity="0.4"/></pattern>`;
-            }
+            if (patName === 'dot') return `<pattern id="${patId}" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.5" fill="${patColor}" opacity="0.4"/></pattern>`;
+            else if (patName === 'circuit') return `<pattern id="${patId}" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M0 15h10l5-5h10 M15 30v-10l5-5h10 M0 5h5l5 5h10 M25 5v5l-5 5v10" fill="none" stroke="${patColor}" stroke-width="1.5" opacity="0.4"/><circle cx="25" cy="10" r="2" fill="${patColor}" opacity="0.6"/><circle cx="10" cy="15" r="2" fill="${patColor}" opacity="0.6"/><circle cx="20" cy="20" r="2" fill="${patColor}" opacity="0.6"/></pattern>`;
+            else return `<pattern id="${patId}" width="40" height="40" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="8" fill="none" stroke="${patColor}" stroke-width="1.5" opacity="0.4"/><circle cx="20" cy="20" r="16" fill="none" stroke="${patColor}" stroke-width="1.5" opacity="0.4"/><circle cx="20" cy="20" r="24" fill="none" stroke="${patColor}" stroke-width="1.5" opacity="0.4"/></pattern>`;
         };
 
-        // --- 1. 地域データ ---
+        // --- データ定義 ---
         const regionData = [
             { id: 'R1', title: 'スタートアップ', sub: 'Agile & Speed', icon: '🚀', exp: '💻 技術', abl: '技術コストを <span class="font-black text-emerald-600">1枚少なく</span> 解決可能。', weak: 'なし' },
             { id: 'R2', title: '文教エリア', sub: 'Data & Evidence', icon: '🎓', exp: '🛡️ データ', abl: 'ドロー時【データ】を選択すれば <span class="font-black text-emerald-600">追加でもう1枚引ける。</span>', weak: 'なし' },
@@ -138,7 +154,6 @@
             { id: 'R4', title: '中心エリア', sub: 'Platform & Hub', icon: '🏢', exp: '🏢 基盤', abl: '専用アクション <span class="font-black text-emerald-600">「コミッター参画」</span> が可能。', weak: '対話2枚以上のPJを単独解決で <span class="font-black text-red-600">-1 HP</span>' }
         ];
 
-        // --- 2. イベントデータ (10種) ---
         const eventsData = [
             {id: 1, title: "オープンデータ推進の風", condition: "解決不要 (ポジティブイベント)", fail: "-", bonus: "全員がデータ山札から1枚引く。不満-1。", e1: "🍃", e2: "🛡️"},
             {id: 2, title: "メンテナンス不足の露呈", condition: "全員で技術計2枚<br>または 誰か1人が[デバッグツール]", fail: "不満+1", bonus: "-", e1: "🔧", e2: "⚠️"},
@@ -152,18 +167,17 @@
             {id: 10, title: "データの二次利用ニュース", condition: "有用な共有リソースが計3枚以上", fail: "変動なし", bonus: "達成なら不満-1。さらに自身が公開中の<br>共有リソース1枚につき1HP獲得。", e1: "📈", e2: "🔄"}
         ];
 
-        // --- 3. プロジェクトデータ (30種) ---
         const projectsData = [
             { id: 1, cat: "safety", title: "AEDマップ", cost: [{t:'data', n:'AED位置情報'}, {t:'tech', n:'地図API'}], hp: 3, e1: "🏥", e2: "🗺️" },
             { id: 2, cat: "safety", title: "日陰ルート案内", cost: [{t:'data', n:'日影データ'}, {t:'tech', n:'地図API'}], hp: 3, e1: "🌳", e2: "☀️" },
-            { id: 3, cat: "safety", title: "持ち物チェッカー", cost: [{t:'data', n:'避難所名簿'}, {t:'tech', n:'Webフォーム'}], hp: 3, e1: "🎒", e2: "✅" },
+            { id: 3, cat: "safety", title: "持ち物チェッカー", cost: [{t:'data', n:'避難所名簿(CSV)'}, {t:'tech', n:'Webフォーム'}], hp: 3, e1: "🎒", e2: "✅" },
             { id: 4, cat: "safety", title: "バリアフリーマップ", cost: [{t:'data', n:'バリアフリー'}, {t:'tech', n:'地図API'}], hp: 3, e1: "♿", e2: "🛣️" },
             { id: 5, cat: "safety", title: "不具合レポート", cost: [{t:'tech', n:'写真投稿'}, {t:'tech', n:'デバッグツール'}, {t:'dial', n:'聞き取り'}], hp: 4, e1: "🚧", e2: "📸" },
             { id: 6, cat: "safety", title: "水害アーカイブ", cost: [{t:'data', n:'浸水履歴'}, {t:'data', n:'古写真'}, {t:'dial', n:'聞き取り'}], hp: 4, e1: "🌊", e2: "📖" },
             { id: 7, cat: "safety", title: "雪かき共有", cost: [{t:'dial', n:'WS'}, {t:'dial', n:'調整'}, {t:'tech', n:'地図API'}], hp: 4, e1: "⛄", e2: "📱" },
-            { id: 8, cat: "safety", title: "炊き出し案内", cost: [{t:'data', n:'避難所名簿'}, {t:'dial', n:'聞き取り'}], hp: 3, e1: "🚰", e2: "🍲" },
-            { id: 9, cat: "safety", title: "ペット避難ガイド", cost: [{t:'data', n:'避難所名簿'}, {t:'dial', n:'ヒアリング'}, {t:'dial', n:'対話テンプレート'}], hp: 4, e1: "🐕", e2: "🏕️" },
-            { id: 10, cat: "safety", title: "多言語誘導シート", cost: [{t:'data', n:'避難所名簿'}, {t:'dial', n:'やさしい日本語'}, {t:'tech', n:'翻訳ツール'}, {t:'tech', n:'PDF基盤'}, {t:'dial', n:'ヒアリング'}], hp: 7, e1: "🗣️", e2: "🌐", high: true },
+            { id: 8, cat: "safety", title: "炊き出し案内", cost: [{t:'data', n:'避難所名簿(CSV)'}, {t:'dial', n:'聞き取り'}], hp: 3, e1: "🚰", e2: "🍲" },
+            { id: 9, cat: "safety", title: "ペット避難ガイド", cost: [{t:'data', n:'避難所名簿(CSV)'}, {t:'dial', n:'ヒアリング'}, {t:'dial', n:'対話テンプレート'}], hp: 4, e1: "🐕", e2: "🏕️" },
+            { id: 10, cat: "safety", title: "多言語誘導シート", cost: [{t:'data', n:'避難所名簿(CSV)'}, {t:'dial', n:'やさしい日本語'}, {t:'tech', n:'翻訳ツール'}, {t:'tech', n:'PDF基盤'}, {t:'dial', n:'ヒアリング'}], hp: 7, e1: "🗣️", e2: "🌐", high: true },
             { id: 11, cat: "life", title: "新ルール対応ゴミ分別検索", cost: [{t:'data', n:'ゴミ分別DB'}, {t:'tech', n:'新Ver対応キット'}, {t:'tech', n:'Webサイト'}], hp: 4, e1: "🗑️", e2: "🔍" },
             { id: 12, cat: "life", title: "アレルギーチェック", cost: [{t:'data', n:'献立データ'}, {t:'tech', n:'アプリ基盤'}], hp: 3, e1: "🍛", e2: "🚫" },
             { id: 13, cat: "life", title: "公園トイレマップ", cost: [{t:'data', n:'トイレデータ'}, {t:'tech', n:'写真投稿'}, {t:'dial', n:'聞き取り'}], hp: 4, e1: "🚼", e2: "🚻" },
@@ -182,11 +196,10 @@
             { id: 26, cat: "co_creation", title: "お祭り手伝い募集", cost: [{t:'dial', n:'ボランティア募集'}, {t:'dial', n:'伝統行事の裏方'}], hp: 3, e1: "🏮", e2: "🤝" },
             { id: 27, cat: "co_creation", title: "商店街図鑑", cost: [{t:'dial', n:'店主インタ'}, {t:'dial', n:'WS'}, {t:'tech', n:'写真投稿'}], hp: 4, e1: "🏪", e2: "👨‍🍳" },
             { id: 28, cat: "co_creation", title: "街のトリセツ", cost: [{t:'dial', n:'地域ルール'}, {t:'dial', n:'聞き取り'}], hp: 3, e1: "📦", e2: "📖" },
-            { id: 29, cat: "co_creation", title: "昔のデジタル写真館", cost: [{t:'data', n:'古写真'}, {t:'tech', n:'デジタル化'}, {t:'dial', n:'聞き取り'}], hp: 4, e1: "🎞️", e2: "👴" },
-            { id: 30, cat: "co_creation", title: "お気に入り自慢マップ", cost: [{t:'data', n:'古写真'}, {t:'dial', n:'聞き取り'}, {t:'dial', n:'WS'}, {t:'tech', n:'地図API'}, {t:'tech', n:'アプリ基盤'}], hp: 7, e1: "⭐", e2: "🗺️", high: true }
+            { id: 29, cat: "co_creation", title: "昔のデジタル写真館", cost: [{t:'data', n:'街の古写真'}, {t:'tech', n:'デジタル化'}, {t:'dial', n:'聞き取り'}], hp: 4, e1: "🎞️", e2: "👴" },
+            { id: 30, cat: "co_creation", title: "お気に入り自慢マップ", cost: [{t:'data', n:'街の古写真'}, {t:'dial', n:'聞き取り'}, {t:'dial', n:'WS'}, {t:'tech', n:'地図API'}, {t:'tech', n:'アプリ基盤'}], hp: 7, e1: "⭐", e2: "🗺️", high: true }
         ];
 
-        // --- 4. リソースデータ (60枚) ---
         const resourceBaseData = [
             { type: 'data', name: 'AED位置情報', sub: 'AED Location Data', desc: '街のどこに命を救う装置があるかの座標データ。', flav: 'いざという時の1分1秒を争う行動の根拠に。', e1: '🏥', e2: '📍', count: 2 },
             { type: 'data', name: '避難所名簿(CSV)', sub: 'Shelter List', desc: '収容人数や設備、連絡先をまとめたリスト。', flav: '「どこに行けばいいか」を論理的に判断する。', e1: '🎒', e2: '📋', count: 2 },
@@ -242,7 +255,6 @@
         eventsData.forEach(e => deck.push({type: 'evt', id: e.id, data: e}));
         for(let i=0; i<5; i++) deck.push({type: 'blank_evt'});
 
-        // HPカードを倍増させ、ペアにして登録
         const hpTypes = [
             {v: 1, c: 40, desc: '1点分としてカウント', flav: '小さな改善の積み重ね。', bgLightClass: 'bg-amber-50', borderClass: 'border-amber-200', textDarkClass: 'text-amber-800', textClass: 'text-amber-600', fromClass: 'from-amber-50'},
             {v: 2, c: 20, desc: '2点分としてカウント', flav: '街の声が形になる喜び。', bgLightClass: 'bg-yellow-50', borderClass: 'border-yellow-200', textDarkClass: 'text-yellow-800', textClass: 'text-amber-500', fromClass: 'from-yellow-50'},
@@ -272,7 +284,7 @@
 
         while (deck.length % 9 !== 0) { deck.push({type: 'empty'}); }
 
-        // ハーフサイズHPカード描画ヘルパー（表面）
+        // ハーフサイズHPカード描画ヘルパー
         function renderHalfHpCard(ht) {
             return `
             <div class="w-full h-full bg-white rounded-[10px] flex flex-col shadow-inner z-10 border-2 ${ht.borderClass} overflow-hidden relative">
@@ -301,8 +313,10 @@
             if (card.type === 'empty') return '';
             
             let content = '';
+            let bgColor = 'bg-white';
 
             if (card.type === 'reg') {
+                bgColor = 'bg-emerald-500';
                 const c = card.data;
                 content = `
                 <div class="w-full h-full rounded-[20px] p-[20px] bg-emerald-500 shadow-sm flex flex-col box-border relative">
@@ -335,8 +349,8 @@
                     </div>
                 </div>`;
             }
-
             else if (card.type === 'blank_reg') {
+                bgColor = 'bg-emerald-500';
                 content = `
                 <div class="w-full h-full rounded-[20px] p-[20px] bg-emerald-500 shadow-sm flex flex-col box-border relative">
                     ${getBorderText('text-white/50')}
@@ -364,8 +378,8 @@
                     </div>
                 </div>`;
             }
-
             else if (card.type === 'sum') {
+                bgColor = 'bg-[#334155]';
                 content = `
                 <div class="w-full h-full rounded-[20px] p-[20px] bg-[#334155] text-white flex flex-col border-[4px] border-slate-500 box-border relative">
                     <div class="absolute inset-0 opacity-10 pointer-events-none" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 15px 15px"></div>
@@ -374,10 +388,10 @@
                             <h2 class="text-[14px] font-black tracking-widest text-slate-300 uppercase leading-none">Game Summary</h2>
                         </div>
                         <div class="">
-                            <p class="text-[9px] font-black text-amber-400 mb-1 leading-none">▶ 自分の番：2アクション選択</p>
+                            <p class="text-[9px] font-black text-amber-400 mb-1 leading-none">▶ 自分の手番：2アクション選択</p>
                             <ul class="text-[8px] space-y-1 bg-slate-800/50 p-1.5 rounded-lg border border-slate-600">
                                 <li><span class="font-bold text-white">● 調査：</span> 山札から2枚引く</li>
-                                <li><span class="font-bold text-white">● 支援：</span> 他人へ手札提供（<span class="text-amber-400 font-bold">+2 HP</span>）</li>
+                                <li><span class="font-bold text-white">● 支援：</span> 他人に手札提供（<span class="text-amber-400 font-bold">+2 HP</span>）</li>
                                 <li><span class="font-bold text-white">● 解決：</span> 手札を支払いPJ達成</li>
                                 <li class="text-blue-300 font-bold">● 参画：<span class="text-[7.5px] font-medium ml-1">共有リソースに2枚×2列を再セット(中心エリア)</span></li>
                             </ul>
@@ -411,8 +425,8 @@
                     </div>
                 </div>`;
             }
-
             else if (card.type === 'evt') {
+                bgColor = 'bg-red-600';
                 const e = card.data;
                 content = `
                 <div class="w-full h-full rounded-[20px] p-[20px] bg-red-600 shadow-sm flex flex-col box-border relative">
@@ -445,8 +459,8 @@
                     </div>
                 </div>`;
             }
-
             else if (card.type === 'blank_evt') {
+                bgColor = 'bg-red-600';
                 content = `
                 <div class="w-full h-full rounded-[20px] p-[20px] bg-red-600 shadow-sm flex flex-col box-border relative">
                     ${getBorderText('text-white/50')}
@@ -476,8 +490,8 @@
                     </div>
                 </div>`;
             }
-
             else if (card.type === 'hp_pair') {
+                bgColor = 'bg-yellow-400';
                 content = `
                 <div class="w-full h-full rounded-[20px] bg-yellow-400 shadow-sm flex flex-col box-border relative overflow-hidden">
                     <div class="absolute top-[196px] left-0 right-0 h-[8px] flex items-center justify-between px-2 z-30">
@@ -493,8 +507,8 @@
                     </div>
                 </div>`;
             }
-
             else if (card.type === 'prj') {
+                bgColor = 'bg-sky-500';
                 const c = card.data;
                 const catInfo = c.cat === 'safety' ? { n: '🛡️ あんしん・街づくり', e: '安全基盤データ (🛡️)' } :
                                 c.cat === 'life' ? { n: '💡 くらし・利便性', e: '生活システム基盤 (💻)' } :
@@ -544,8 +558,8 @@
                     </div>
                 </div>`;
             }
-
             else if (card.type === 'blank_prj') {
+                bgColor = 'bg-sky-500';
                 content = `
                 <div class="w-full h-full rounded-[20px] p-[20px] bg-sky-500 shadow-sm flex flex-col box-border relative">
                     ${getBorderText('text-white/50')}
@@ -584,8 +598,8 @@
                     </div>
                 </div>`;
             }
-
             else if (card.type === 'res') {
+                bgColor = 'bg-slate-700';
                 const c = card.data;
                 const e1 = c.e1 || '📦';
                 const e2 = c.e2 || '✨';
@@ -651,8 +665,8 @@
                     </div>
                 </div>`;
             }
-
             else if (card.type === 'blank_res') {
+                bgColor = 'bg-slate-700';
                 content = `
                 <div class="w-full h-full rounded-[20px] p-[20px] bg-slate-700 shadow-sm flex flex-col box-border relative">
                     ${getBorderText('text-white/50')}
@@ -680,18 +694,18 @@
                 </div>`;
             }
 
-            return content;
+            return withBleed(content, bgColor);
         }
 
-        // ----------------------------------------------------
-        // 3. レンダリング関数 (裏面)
-        // ----------------------------------------------------
+        // --- レンダリング (裏面) ---
         function renderBack(card) {
-            if (!card) return '';
-            const wrap = (content) => `<div class="content-scale">${content}</div>`;
+            if (!card || card.type === 'empty') return '';
             
-            // --- プロジェクトカードの裏面（共有リソースデザイン） ---
+            let content = '';
+            let bgColor = 'bg-slate-700';
+            
             if (card.type === 'prj' || card.type === 'blank_prj') {
+                bgColor = 'bg-slate-700';
                 const cat = card.cat || (card.data && card.data.cat) || 'safety';
                 const patId = `pat-back-${card.type}-${card.id || 'blank'}-${Math.random().toString(36).substr(2, 9)}`;
                 
@@ -717,8 +731,8 @@
                     sc.cl = 'bg-sky-50 text-sky-800 border-sky-200'; sc.ib = 'border-sky-200';
                 }
 
-                return wrap(`
-                <div class="w-[280px] h-[400px] rounded-[20px] p-[20px] bg-slate-700 shadow-sm flex flex-col box-border relative">
+                content = `
+                <div class="w-full h-full rounded-[20px] p-[20px] bg-slate-700 shadow-sm flex flex-col box-border relative">
                     ${getBorderText('text-white/50')}
                     <div class="relative w-full h-full bg-white rounded-[12px] flex flex-col shadow-inner z-10 border-2 border-slate-300 overflow-hidden">
                         
@@ -767,11 +781,10 @@
                         </div>
 
                     </div>
-                </div>`);
+                </div>`;
             }
-
-            // --- HPカードの裏面（ハーフサイズ2枚組対応） ---
             else if (card.type === 'hp_pair') {
+                bgColor = 'bg-yellow-400';
                 const backSvg = (cClass) => `
                     <div class="w-full h-full border-2 border-white rounded-[8px] flex flex-col items-center justify-center relative overflow-hidden bg-slate-800/10">
                         <div class="absolute inset-0 pat-hp opacity-50"></div>
@@ -788,8 +801,8 @@
                         </div>
                     </div>`;
 
-                return wrap(`
-                <div class="w-[280px] h-[400px] rounded-[20px] bg-yellow-400 flex flex-col box-border border-[6px] border-yellow-400 relative overflow-hidden">
+                content = `
+                <div class="w-full h-full rounded-[20px] bg-yellow-400 flex flex-col box-border border-[6px] border-yellow-400 relative overflow-hidden">
                     <div class="absolute top-[188px] left-[-6px] right-[-6px] h-[12px] flex items-center justify-center z-30">
                         <span class="text-[8px] text-yellow-800/80 mr-1">✂</span>
                         <div class="w-full border-t border-dashed border-yellow-800/50"></div>
@@ -803,60 +816,61 @@
                     <div class="absolute bottom-0 left-0 right-0 h-[188px] p-[4px]">
                         ${backSvg(card.card2.textClass || 'text-amber-600')}
                     </div>
-                </div>`);
+                </div>`;
             }
+            else {
+                let border = "border-slate-700", innerBorder = "border-slate-600", text = "CIVIC TECH TOWN", svgContent = "", bgDeco = "", coloredLines = "", htmlContent = "";
+                let colorClass = "text-white";
+                
+                if(card.type === 'reg' || card.type === 'blank_reg') {
+                    bgColor="bg-emerald-500"; border="border-emerald-500"; innerBorder="border-white"; text="REGION BASE";
+                    svgContent=`<path d="M140 200 L60 80 M140 200 L220 80 M140 200 L60 320 M140 200 L220 320" stroke="white" stroke-width="2" stroke-dasharray="6 6" opacity="0.4"/><path d="M140 155 L179 177.5 V222.5 L140 245 L101 222.5 V177.5 Z" fill="white"/><path d="M140 185 L150 195 H130 L140 185Z" fill="#10b981"/><rect x="133" y="195" width="14" height="12" fill="#10b981"/><circle cx="140" cy="218" r="4" fill="#10b981"/>`;
+                    bgDeco=`<div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(rgba(255, 255, 255, 0.7) 1px, transparent 1px); background-size: 20px 20px;"></div>`;
+                } 
+                else if(card.type === 'res' || card.type === 'blank_res') {
+                    bgColor="bg-slate-700";
+                    const sub = card.sub || 'data';
+                    if(sub === 'data') { innerBorder="border-sky-400"; text="RESOURCE / DATA"; svgContent=`<path d="M140 200 L240 100 M40 300 L140 200" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.4"/><circle cx="240" cy="100" r="4" fill="#38bdf8" opacity="0.6"/><circle cx="40" cy="300" r="4" fill="#38bdf8" opacity="0.6"/><path d="M140 155 L180 177.5 V222.5 L140 245 L100 222.5 V177.5 Z" fill="#38bdf8"/><rect x="122" y="205" width="6" height="12" fill="white"/><rect x="132" y="195" width="6" height="22" fill="white"/><rect x="142" y="200" width="6" height="17" fill="white"/>`; }
+                    else if(sub === 'tech') { innerBorder="border-purple-400"; text="RESOURCE / TECH"; svgContent=`<path d="M40 100 L240 300" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.4"/><circle cx="40" cy="100" r="4" fill="#a855f7" opacity="0.6"/><circle cx="240" cy="300" r="4" fill="#a855f7" opacity="0.6"/><path d="M140 155 L180 177.5 V200 L160 220 L140 245 L100 222.5 V177.5 Z" fill="#a855f7"/><rect x="128" y="188" width="24" height="24" rx="2" fill="white" transform="rotate(45 140 200)"/><circle cx="140" cy="200" r="5" fill="#a855f7"/>`; }
+                    else { innerBorder="border-emerald-400"; text="RESOURCE / DIALOGUE"; svgContent=`<circle cx="140" cy="200" r="70" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4 8" opacity="0.3"/><path d="M140 155 L180 177.5 V210 L165 210 L140 245 L115 210 L100 210 V177.5 Z" fill="#10b981"/><circle cx="134" cy="190" r="8" fill="white"/><circle cx="146" cy="198" r="8" fill="white" opacity="0.8"/>`; }
+                    bgDeco=`<div class="absolute inset-0 grid-bg-back"></div>`;
+                    const lc = {data:'bg-sky-400', tech:'bg-purple-400', dial:'bg-emerald-400'};
+                    coloredLines=`<div class="absolute top-0 left-0 right-0 h-1 ${lc[sub]}"></div><div class="absolute bottom-0 left-0 right-0 h-1 ${lc[sub]}"></div>`;
+                } 
+                else if(card.type === 'evt' || card.type === 'blank_evt') {
+                    bgColor="bg-red-600"; border="border-red-600"; innerBorder="border-white"; text="EVENT / ALERT";
+                    svgContent=`<path d="M140 150 L185 175 V225 L140 250 L95 225 V175 Z" fill="white"/><rect x="136" y="185" width="8" height="20" rx="4" fill="#dc2626"/><circle cx="140" cy="215" r="4.5" fill="#dc2626"/>`;
+                    bgDeco=`<div class="absolute inset-0 pat-event opacity-10"></div>`;
+                } 
+                else if(card.type === 'sum') {
+                    bgColor="bg-slate-700"; border="border-slate-700"; innerBorder="border-slate-400"; text="TOWN / SUMMARY";
+                    svgContent=`<path d="M140 200 L40 100 M140 200 L240 100 M140 200 L40 300 M140 200 L240 300" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4 4"/><path d="M140 160 L174.6 180 V220 L140 240 L105.4 220 V180 Z" fill="white" stroke="#475569" stroke-width="3"/><path d="M120 220 V210 L128 202 L135 210 V220 H120Z M135 220 V200 L142 193 L150 200 V220 H135Z M150 220 V212 L155 207 L160 212 V220 H150Z" fill="#475569"/>`;
+                    bgDeco=`<div class="absolute inset-0 grid-bg-back opacity-20"></div>`;
+                } 
 
-            // --- プロジェクト以外は幾何学模様のシンプル裏面 ---
-            let bg = "bg-slate-800", border = "border-slate-700", innerBorder = "border-slate-600", text = "CIVIC TECH TOWN", svgContent = "", bgDeco = "", coloredLines = "", htmlContent = "";
-            let colorClass = "text-white";
-            
-            if(card.type === 'reg' || card.type === 'blank_reg') {
-                bg="bg-emerald-500"; border="border-emerald-500"; innerBorder="border-white"; text="REGION BASE";
-                svgContent=`<path d="M140 200 L60 80 M140 200 L220 80 M140 200 L60 320 M140 200 L220 320" stroke="white" stroke-width="2" stroke-dasharray="6 6" opacity="0.4"/><path d="M140 155 L179 177.5 V222.5 L140 245 L101 222.5 V177.5 Z" fill="white"/><path d="M140 185 L150 195 H130 L140 185Z" fill="#10b981"/><rect x="133" y="195" width="14" height="12" fill="#10b981"/><circle cx="140" cy="218" r="4" fill="#10b981"/>`;
-                bgDeco=`<div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(rgba(255, 255, 255, 0.7) 1px, transparent 1px); background-size: 20px 20px;"></div>`;
-            } 
-            else if(card.type === 'res' || card.type === 'blank_res') {
-                const sub = card.sub || 'data';
-                if(sub === 'data') { innerBorder="border-sky-400"; text="RESOURCE / DATA"; svgContent=`<path d="M140 200 L240 100 M40 300 L140 200" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.4"/><circle cx="240" cy="100" r="4" fill="#38bdf8" opacity="0.6"/><circle cx="40" cy="300" r="4" fill="#38bdf8" opacity="0.6"/><path d="M140 155 L180 177.5 V222.5 L140 245 L100 222.5 V177.5 Z" fill="#38bdf8"/><rect x="122" y="205" width="6" height="12" fill="white"/><rect x="132" y="195" width="6" height="22" fill="white"/><rect x="142" y="200" width="6" height="17" fill="white"/>`; }
-                else if(sub === 'tech') { innerBorder="border-purple-400"; text="RESOURCE / TECH"; svgContent=`<path d="M40 100 L240 300" stroke="#a855f7" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.4"/><circle cx="40" cy="100" r="4" fill="#a855f7" opacity="0.6"/><circle cx="240" cy="300" r="4" fill="#a855f7" opacity="0.6"/><path d="M140 155 L180 177.5 V200 L160 220 L140 245 L100 222.5 V177.5 Z" fill="#a855f7"/><rect x="128" y="188" width="24" height="24" rx="2" fill="white" transform="rotate(45 140 200)"/><circle cx="140" cy="200" r="5" fill="#a855f7"/>`; }
-                else { innerBorder="border-emerald-400"; text="RESOURCE / DIALOGUE"; svgContent=`<circle cx="140" cy="200" r="70" stroke="#10b981" stroke-width="1.5" stroke-dasharray="4 8" opacity="0.3"/><path d="M140 155 L180 177.5 V210 L165 210 L140 245 L115 210 L100 210 V177.5 Z" fill="#10b981"/><circle cx="134" cy="190" r="8" fill="white"/><circle cx="146" cy="198" r="8" fill="white" opacity="0.8"/>`; }
-                bgDeco=`<div class="absolute inset-0 grid-bg-back"></div>`;
-                const lc = {data:'bg-sky-400', tech:'bg-purple-400', dial:'bg-emerald-400'};
-                coloredLines=`<div class="absolute top-0 left-0 right-0 h-1 ${lc[sub]}"></div><div class="absolute bottom-0 left-0 right-0 h-1 ${lc[sub]}"></div>`;
-            } 
-            else if(card.type === 'evt' || card.type === 'blank_evt') {
-                bg="bg-red-600"; border="border-red-600"; innerBorder="border-white"; text="EVENT / ALERT";
-                svgContent=`<path d="M140 150 L185 175 V225 L140 250 L95 225 V175 Z" fill="white"/><rect x="136" y="185" width="8" height="20" rx="4" fill="#dc2626"/><circle cx="140" cy="215" r="4.5" fill="#dc2626"/>`;
-                bgDeco=`<div class="absolute inset-0 pat-event opacity-10"></div>`;
-            } 
-            else if(card.type === 'sum') {
-                bg="bg-slate-700"; border="border-slate-700"; innerBorder="border-slate-400"; text="TOWN / SUMMARY";
-                svgContent=`<path d="M140 200 L40 100 M140 200 L240 100 M140 200 L40 300 M140 200 L240 300" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4 4"/><path d="M140 160 L174.6 180 V220 L140 240 L105.4 220 V180 Z" fill="white" stroke="#475569" stroke-width="3"/><path d="M120 220 V210 L128 202 L135 210 V220 H120Z M135 220 V200 L142 193 L150 200 V220 H135Z M150 220 V212 L155 207 L160 212 V220 H150Z" fill="#475569"/>`;
-                bgDeco=`<div class="absolute inset-0 grid-bg-back opacity-20"></div>`;
+                content = `
+                <div class="w-full h-full p-[10px] bg-slate-800 flex flex-col box-border border-[6px] ${border} rounded-[20px]">
+                    <div class="w-full h-full border-2 ${innerBorder} rounded-[10px] flex flex-col items-center justify-center relative overflow-hidden bg-slate-800/10">
+                        ${bgDeco}${coloredLines}
+                        <div class="absolute inset-0 flex items-center justify-center ${colorClass} z-0">
+                            <svg width="280" height="400" viewBox="0 0 280 400" fill="none">
+                                ${svgContent}
+                            </svg>
+                        </div>
+                        <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                            ${htmlContent}
+                        </div>
+                        <div class="absolute bottom-6 w-full text-center z-20">
+                            <span class="text-white font-black tracking-[0.3em] text-[10px] opacity-90 drop-shadow-md">${text}</span>
+                        </div>
+                    </div>
+                </div>`;
             } 
 
-            return `
-            <div class="w-full h-full p-[10px] ${bg} flex flex-col box-border border-[6px] ${border} rounded-[20px]">
-                <div class="w-full h-full border-2 ${innerBorder} rounded-[10px] flex flex-col items-center justify-center relative overflow-hidden bg-slate-800/10">
-                    ${bgDeco}${coloredLines}
-                    <div class="absolute inset-0 flex items-center justify-center ${colorClass} z-0">
-                        <svg width="280" height="400" viewBox="0 0 280 400" fill="none">
-                            ${svgContent}
-                        </svg>
-                    </div>
-                    <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                        ${htmlContent}
-                    </div>
-                    <div class="absolute bottom-6 w-full text-center z-20">
-                        <span class="text-white font-black tracking-[0.3em] text-[10px] opacity-90 drop-shadow-md">${text}</span>
-                    </div>
-                </div>
-            </div>`;
+            return withBleed(content, bgColor);
         }
 
-        // ----------------------------------------------------
-        // 4. ページ構築処理
-        // ----------------------------------------------------
+        // --- ページ構築処理 ---
         const printArea = document.getElementById('print-area');
         
         for (let i = 0; i < deck.length; i += 9) {
